@@ -317,7 +317,7 @@ body {
 <div class="header">
   <div class="header-row1">
     <div>
-      <div class="app-title">🐟 RACE  RESULTS</div>
+      <div class="app-title">🐟 Race RESULTS</div>
     </div>
     <div class="live-pill" id="livePill" style="display:none;">
       <div class="live-dot"></div>LIVE
@@ -955,7 +955,7 @@ function renderIndividual() {
         <table class="rtable">
           <thead>
             <tr>
-              <th style="width:38px;">#</th>
+              <th style="width:38px;">ΘΕΣΗ</th>
               <th>Αθλητής</th>
               <th style="text-align:center;color:var(--gold);">Βαθμοί</th>
               <th style="text-align:right;">${hdrScore}</th>
@@ -965,7 +965,7 @@ function renderIndividual() {
           <tbody>${rows}</tbody>
         </table>
       </div>
-      <div class="footer">Kritis Results v5 · Ατομική Κατάταξη</div>
+      <div class="footer">Race Results v5 · Ατομική Κατάταξη</div>
     </div>`;
 }
 
@@ -1028,7 +1028,7 @@ function renderLive(flashSector) {
     html += renderSectorTable(sName, flashSector === sName, 'live');
   }
 
-  html += '<div class="footer">Race Results v5 · Live</div></div>';
+  html += '<div class="footer">Race Results v3 · Live</div></div>';
   main.innerHTML = html;
 }
 
@@ -1042,12 +1042,29 @@ function renderOverall() {
     html += renderSectorTable(s.name, false, 'overall');
   });
 
-  html += '<div class="footer">Kritis Results v5</div></div>';
+  html += '<div class="footer">Race Results v5</div></div>';
   main.innerHTML = html;
 }
 
+// ── Live fish data per athlete ──
+// Επιστρέφει map: position → { allFish[], maxCatch }
+function buildLiveFish(sectorName) {
+  const sectorMeas = measurements.filter(m => m.sector===sectorName && m.completed);
+  const fishMap = {};
+
+  sectorMeas.forEach(m => {
+    (m.athletes||[]).forEach(a => {
+      if (!fishMap[a.position]) fishMap[a.position] = [];
+      if (a.fish && a.fish.length) {
+        fishMap[a.position].push(...a.fish);
+      }
+    });
+  });
+  return fishMap;
+}
+
 // ── SECTOR TABLE ──
-// mode: 'live' (compact) | 'overall' (full columns)
+// mode: 'live' (με ψάρια) | 'overall' (full columns)
 function renderSectorTable(sName, flash=false, mode='live') {
   const isFloat  = currentRace.game_type === 'float';
   const twoList  = isTwoListMode();
@@ -1073,8 +1090,32 @@ function renderSectorTable(sName, flash=false, mode='live') {
     return `<span style="background:${c[pt]||'var(--muted)'};color:var(--navy);padding:1px 4px;border-radius:3px;font-size:.65em;font-weight:700;margin-left:3px;">${pt}</span>`;
   }
 
+  // Fish chips για live mode
+  function fishChips(allFish) {
+    if (!allFish || !allFish.length) return '<span style="color:var(--muted);font-size:.8em;">—</span>';
+    const maxVal = Math.max(...allFish);
+    // Wrap ανά 10
+    let html = '<div style="display:flex;flex-wrap:wrap;gap:3px;align-items:center;">';
+    allFish.forEach((f, i) => {
+      const isMax = f === maxVal;
+      const color = isMax ? 'var(--gold)' : 'var(--muted)';
+      const bg    = isMax ? 'rgba(255,214,0,0.15)' : 'rgba(255,255,255,0.05)';
+      const fw    = isMax ? '700' : '400';
+      html += `<span style="background:${bg};color:${color};border-radius:4px;padding:1px 5px;font-family:'IBM Plex Mono',monospace;font-size:.78em;font-weight:${fw};white-space:nowrap;">${f}</span>`;
+      // Soft separator κάθε 10
+      if ((i+1) % 10 === 0 && i < allFish.length-1) {
+        html += '<span style="width:100%;height:0;"></span>';
+      }
+    });
+    html += '</div>';
+    return html;
+  }
+
   let rows = '';
-  const emptyColspan = full ? (isFloat ? 7 : (twoList ? 8 : 7)) : 4;
+  const emptyColspan = full ? (isFloat ? 7 : (twoList ? 8 : 7)) : (isFloat ? 4 : 5);
+
+  // Live fish map (μόνο για live mode casting)
+  const liveFish = (!full && !isFloat) ? buildLiveFish(sName) : {};
 
   if (rankings.length === 0) {
     rows = `<tr><td colspan="${emptyColspan}" style="text-align:center;padding:18px;color:var(--muted);font-size:.85em;">Δεν υπάρχουν ακόμα καταμετρήσεις</td></tr>`;
@@ -1089,16 +1130,17 @@ function renderSectorTable(sName, flash=false, mode='live') {
 
       if (!full) {
         return `<tr class="${rowc} ${newc}">
-          <td class="rank-cell ${rkc}">${medal}${tied}</td>
+          <td style="font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:.9em;color:var(--muted);width:38px;">${a.position}</td>
           <td><div class="athlete-name">${a.lastname} ${a.firstname}</div>${a.club?`<div class="athlete-club">${a.club}</div>`:''}</td>
           <td class="score-val">${a.totalWeight}<span class="score-unit"> gr</span></td>
           <td class="sub-score">${a.maxFish>0?a.maxFish+' gr':'—'}</td>
+          <td class="rank-cell ${rkc}" style="width:40px;">${medal}${tied}</td>
         </tr>`;
       }
       // Full columns — float
       const rankTeam = twoList ? (a.sectorRankTeam!=null ? `<span style="color:var(--green);">${a.sectorRankTeam}</span>` : '—') : '';
       return `<tr class="${rowc} ${newc}">
-        <td class="rank-cell ${rkc}">${medal}${tied}</td>
+        <td style="font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:.9em;color:var(--muted);width:38px;">${a.position}</td>
         <td><div class="athlete-name">${a.lastname} ${a.firstname}${ptBadge(a)}</div><div class="athlete-club">${a.club||''}</div></td>
         <td class="sub-score" style="text-align:center;">${a.maxFish>0?a.maxFish+' gr':'—'}</td>
         <td class="score-val">${a.totalWeight}<span class="score-unit"> gr</span></td>
@@ -1120,12 +1162,18 @@ function renderSectorTable(sName, flash=false, mode='live') {
       const total = cm + px10;
 
       if (!full) {
-        const showMax = a.tied && (a.maxCatch||0) > 0;
+        // Live mode — ψάρια ένα-ένα
+        const allFish = liveFish[a.position] || [];
         return `<tr class="${rowc} ${newc}">
-          <td class="rank-cell ${rkc}">${medal}${a.tied?'<span class="tied">=</span>':''}</td>
-          <td><div class="athlete-name">${a.lastname} ${a.firstname}</div>${a.club?`<div class="athlete-club">${a.club}</div>`:''}</td>
-          <td class="sub-score" style="text-align:center;">${fish}${showMax?` <span style="color:var(--cyan);font-size:.7em;">max:${a.maxCatch}cm</span>`:''}</td>
-          <td class="score-val">${total}<span class="score-unit"> pt</span></td>
+          <td style="font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:.9em;color:var(--muted);width:38px;vertical-align:top;padding-top:10px;">${a.position}</td>
+          <td style="vertical-align:top;padding-top:8px;">
+            <div class="athlete-name">${a.lastname} ${a.firstname}</div>
+            <div class="athlete-club">${a.club||''}</div>
+          </td>
+          <td style="vertical-align:top;padding:8px 6px;">${fishChips(allFish)}</td>
+          <td class="sub-score" style="text-align:center;vertical-align:top;padding-top:10px;">${fish}</td>
+          <td class="score-val" style="vertical-align:top;padding-top:10px;">${total}<span class="score-unit"> pt</span></td>
+          <td class="rank-cell ${rkc}" style="width:44px;vertical-align:top;padding-top:8px;">${medal}${a.tied?'<span class="tied">=</span>':''}</td>
         </tr>`;
       }
       // Full columns — casting
@@ -1133,7 +1181,7 @@ function renderSectorTable(sName, flash=false, mode='live') {
         ? (a.sectorRankTeam!=null ? `<span style="color:var(--green);font-weight:700;">${a.sectorRankTeam}</span>` : '<span style="color:var(--muted);">—</span>')
         : '';
       return `<tr class="${rowc} ${newc}">
-        <td class="rank-cell ${rkc}">${medal}${a.tied?'<span class="tied">=</span>':''}</td>
+        <td style="font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:.9em;color:var(--muted);width:38px;">${a.position}</td>
         <td><div class="athlete-name">${a.lastname} ${a.firstname}${ptBadge(a)}</div><div class="athlete-club">${a.club||''}</div></td>
         <td class="sub-score" style="text-align:center;">${fish}</td>
         <td class="sub-score" style="text-align:right;">${cm}</td>
@@ -1149,8 +1197,8 @@ function renderSectorTable(sName, flash=false, mode='live') {
   let hdrCols;
   if (!full) {
     hdrCols = isFloat
-      ? `<th style="text-align:right;">Βάρος</th><th style="text-align:right;">Max</th>`
-      : `<th style="text-align:center;">🐟</th><th style="text-align:right;">Σύνολο</th>`;
+      ? `<th style="text-align:right;">Βάρος</th><th style="text-align:right;">Max</th><th style="width:44px;"></th>`
+      : `<th>Ψάρια (cm)</th><th style="text-align:center;width:40px;">🐟</th><th style="text-align:right;">Σύνολο</th><th style="width:44px;">Κατ.</th>`;
   } else if (isFloat) {
     hdrCols = `
       <th style="text-align:center;">Max</th>
@@ -1281,7 +1329,7 @@ function renderTeam() {
   });
 
   html += `</tbody></table></div>
-    <div class="footer">Kritis Results v5 · Ομαδική Κατάταξη</div>
+    <div class="footer">Race Results v5 · Ομαδική Κατάταξη</div>
   </div>`;
   main.innerHTML = html;
 }
