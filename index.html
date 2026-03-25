@@ -215,7 +215,7 @@ body {
   background:rgba(0,200,224,0.07);
   color:var(--muted); font-size:.72em; font-weight:700;
   letter-spacing:.8px; text-transform:uppercase;
-  padding:8px 10px; border-bottom:1px solid var(--border);
+  padding:6px 8px; border-bottom:1px solid var(--border);
 }
 .rtable tbody tr {
   border-bottom:1px solid rgba(255,255,255,0.04);
@@ -223,7 +223,7 @@ body {
 }
 .rtable tbody tr:hover { background:rgba(0,200,224,0.04); }
 .rtable tbody tr:last-child { border-bottom:none; }
-.rtable td { padding:10px 10px; vertical-align:middle; }
+.rtable td { padding:6px 8px; vertical-align:middle; }
 
 /* Row highlights */
 .rtable tbody tr.r1 { background:rgba(255,214,0,0.05); }
@@ -240,8 +240,18 @@ body {
 .rk3 { color:var(--bronze); }
 .rko { color:var(--muted); }
 
-.athlete-name { font-weight:700; color:var(--white); font-size:.95em; }
-.athlete-club { font-size:.72em; color:var(--muted); margin-top:1px; }
+.athlete-name { font-weight:700; color:var(--white); font-size:.82em; line-height:1.3; }
+.athlete-club { font-size:.72em; color:var(--cyan); margin-top:1px; line-height:1.3; }
+.athlete-sponsor { font-size:.72em; color:var(--gold); margin-top:1px; line-height:1.3; }
+.ptype-badge {
+  display:inline-block; padding:0px 4px; border-radius:3px;
+  font-size:.68em; font-weight:700; margin-left:3px; vertical-align:middle;
+}
+.ptype-AO { background:rgba(255,214,0,0.18); color:var(--gold); }
+.ptype-A  { background:rgba(0,200,224,0.18); color:var(--cyan); }
+.ptype-O  { background:rgba(0,230,118,0.18); color:var(--green); }
+.overall-table-wrap { overflow-x:auto; }
+.overall-table-wrap .rtable { min-width:560px; }
 
 .score-val {
   font-family:'IBM Plex Mono',monospace;
@@ -545,6 +555,7 @@ function buildSectorScores(sectorName) {
       lastname:    a.lastname  || '',
       firstname:   a.firstname || '',
       club:        a.club      || '',
+      sponsor:     a.sponsor   || '',
       participationType: getPType(a),
       omadiko:     a.omadiko   || false,
       totalCm: 0, totalFish: 0, maxCatch: 0,
@@ -564,6 +575,15 @@ function buildSectorScores(sectorName) {
         totals[a.position].totalFish += (a.fish ? a.fish.length : 0);
         const mx = a.fish?.length ? Math.max(...a.fish) : 0;
         if (mx > totals[a.position].maxCatch) totals[a.position].maxCatch = mx;
+      }
+    });
+  });
+
+  // Συμπλήρωση sponsor από measurements (αν λείπει από races.athletes)
+  sectorMeas.forEach(m => {
+    (m.athletes||[]).forEach(a => {
+      if (totals[a.position] && !totals[a.position].sponsor && a.sponsor) {
+        totals[a.position].sponsor = a.sponsor;
       }
     });
   });
@@ -913,37 +933,46 @@ function renderIndividual() {
 
   let rows = '';
   if (rankings.length === 0) {
-    rows = `<tr><td colspan="5" style="text-align:center;padding:18px;color:var(--muted);font-size:.85em;">Δεν υπάρχουν ακόμα καταμετρήσεις</td></tr>`;
+    rows = `<tr><td colspan="7" style="text-align:center;padding:18px;color:var(--muted);font-size:.85em;">Δεν υπάρχουν ακόμα καταμετρήσεις</td></tr>`;
   } else {
     rows = rankings.map(a => {
-      const rkc   = a.indRank===1?'rk1':a.indRank===2?'rk2':a.indRank===3?'rk3':'rko';
-      const medal = a.indRank===1?'🥇':a.indRank===2?'🥈':a.indRank===3?'🥉':a.indRank;
-      const rowc  = a.indRank<=3 ? `r${a.indRank}` : '';
-      const tiedBadge = a.indTied ? '<span class="tied">=</span>' : '';
-
-      // Score display
-      const scoreHtml = isFloat
-        ? `<td class="score-val">${a.totalWeight}<span class="score-unit"> gr</span></td>`
-        : `<td class="score-val">${a.score}<span class="score-unit"> pt</span></td>`;
-
-      // Tiebreaker — εμφανίζεται μόνο αν υπάρχει ισοβαθμία στους βαθμούς
-      const tbHtml = isFloat
-        ? `<td class="sub-score">${a.maxFish > 0 ? a.maxFish+' gr' : '—'}</td>`
-        : `<td class="sub-score" style="text-align:center;">${a.totalFish}</td>`;
+      const rkc      = a.indRank===1?'rk1':a.indRank===2?'rk2':a.indRank===3?'rk3':'rko';
+      const medal    = a.indRank===1?'🥇':a.indRank===2?'🥈':a.indRank===3?'🥉':a.indRank;
+      const rowc     = a.indRank<=3 ? `r${a.indRank}` : '';
+      const tied     = a.indTied ? '<span class="tied">=</span>' : '';
+      const score    = isFloat ? (a.totalWeight||0) : (a.totalCm||0)+(a.totalFish||0)*10;
+      const scoreDisp= isFloat
+        ? `<td class="score-val">${score}<span class="score-unit"> gr</span></td>`
+        : `<td class="score-val">${score}<span class="score-unit"> pt</span></td>`;
+      const maxDisp  = isFloat
+        ? `<td class="sub-score" style="text-align:right;">${(a.maxFish||0)>0?a.maxFish+' gr':'—'}</td>`
+        : `<td class="sub-score" style="text-align:right;">${(a.maxCatch||0)>0?a.maxCatch+' cm':'—'}</td>`;
+      const fishDisp = !isFloat
+        ? `<td class="sub-score" style="text-align:center;">${a.totalFish||0}</td>`
+        : '';
 
       return `<tr class="${rowc}">
-        <td class="rank-cell ${rkc}">${medal}${tiedBadge}</td>
-        <td><div class="athlete-name">${a.lastname} ${a.firstname}</div>
-            <div class="athlete-club">${a.club} · Τομ.${a.sector}</div></td>
-        <td class="sub-score" style="text-align:center;color:var(--gold);">${a.points}</td>
-        ${scoreHtml}
-        ${tbHtml}
+        <td class="rank-cell ${rkc}" style="width:36px;">${medal}${tied}</td>
+        <td>${athleteCell(a)}</td>
+        <td class="sub-score" style="text-align:center;color:var(--muted);">${a.sector}${a.position||''}</td>
+        <td class="sub-score" style="text-align:center;color:var(--gold);font-weight:700;">${a.points}</td>
+        ${!isFloat ? fishDisp : ''}
+        ${scoreDisp}
+        ${maxDisp}
       </tr>`;
     }).join('');
   }
 
-  const hdrScore = isFloat ? 'Βάρος' : 'Σκορ';
-  const hdrTb    = isFloat ? 'Max'   : 'Ψάρια';
+  const hdrCols = isFloat
+    ? `<th style="text-align:center;color:var(--muted);">Τομέας</th>
+       <th style="text-align:center;color:var(--gold);">Κατ.Τομ.</th>
+       <th style="text-align:right;">Βάρος</th>
+       <th style="text-align:right;color:var(--muted);">Max</th>`
+    : `<th style="text-align:center;color:var(--muted);">Τομέας</th>
+       <th style="text-align:center;color:var(--gold);">Κατ.Τομ.</th>
+       <th style="text-align:center;">🐟</th>
+       <th style="text-align:right;">Σύνολο</th>
+       <th style="text-align:right;color:var(--muted);">Max</th>`;
 
   main.innerHTML = `
     <div id="individualView">
@@ -952,20 +981,18 @@ function renderIndividual() {
           <span class="results-card-title">ΑΤΟΜΙΚΗ ΚΑΤΑΤΑΞΗ</span>
           <span class="meta-chip gt">${isFloat ? '🎣 Float' : '🎯 Casting'}</span>
         </div>
-        <table class="rtable">
-          <thead>
-            <tr>
-              <th style="width:38px;">ΘΕΣΗ ΚΑΤΑΤΑΞΗΣ.</th>
-              <th>Αθλητής</th>
-              <th style="text-align:center;color:var(--gold);">Βαθμοί</th>
-              <th style="text-align:right;">${hdrScore}</th>
-              <th style="text-align:right;">${hdrTb}</th>
-            </tr>
-          </thead>
-          <tbody>${rows}</tbody>
-        </table>
+        <div class="overall-table-wrap">
+          <table class="rtable">
+            <thead><tr>
+              <th style="width:36px;">#</th>
+              <th>ΑΘΛΗΤΗΣ</th>
+              ${hdrCols}
+            </tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
       </div>
-      <div class="footer">Race Results v5 · Ατομική Κατάταξη</div>
+      <div class="footer">Kritis Results v6 · Ατομική Κατάταξη</div>
     </div>`;
 }
 
@@ -1063,6 +1090,15 @@ function buildLiveFish(sectorName) {
   return fishMap;
 }
 
+// ── Athlete cell HTML (όνομα + σύλλογος + χορηγός + badge) ──
+function athleteCell(a) {
+  const pt = getPType(a);
+  const sp = a.sponsor || '';
+  return `<div class="athlete-name">${a.lastname} ${a.firstname}<span class="ptype-badge ptype-${pt}">${pt}</span></div>
+          <div class="athlete-club">${a.club||''}</div>
+          ${sp ? `<div class="athlete-sponsor">${sp}</div>` : ''}`;
+}
+
 // ── SECTOR TABLE ──
 // mode: 'live' (με ψάρια) | 'overall' (full columns)
 function renderSectorTable(sName, flash=false, mode='live') {
@@ -1083,18 +1119,10 @@ function renderSectorTable(sName, flash=false, mode='live') {
     ? `<span class="meta-chip" style="background:rgba(255,165,0,0.15);border-color:rgba(255,165,0,0.4);color:orange;">⚡ Τεχνητός</span>`
     : '';
 
-  // pType badge
-  function ptBadge(a) {
-    const pt = getPType(a);
-    const c  = {AO:'var(--gold)',A:'var(--cyan)',O:'var(--green)'};
-    return `<span style="background:${c[pt]||'var(--muted)'};color:var(--navy);padding:1px 4px;border-radius:3px;font-size:.65em;font-weight:700;margin-left:3px;">${pt}</span>`;
-  }
-
   // Fish chips για live mode
   function fishChips(allFish) {
     if (!allFish || !allFish.length) return '<span style="color:var(--muted);font-size:.8em;">—</span>';
     const maxVal = Math.max(...allFish);
-    // Wrap ανά 10
     let html = '<div style="display:flex;flex-wrap:wrap;gap:3px;align-items:center;">';
     allFish.forEach((f, i) => {
       const isMax = f === maxVal;
@@ -1102,7 +1130,6 @@ function renderSectorTable(sName, flash=false, mode='live') {
       const bg    = isMax ? 'rgba(255,214,0,0.15)' : 'rgba(255,255,255,0.05)';
       const fw    = isMax ? '700' : '400';
       html += `<span style="background:${bg};color:${color};border-radius:4px;padding:1px 5px;font-family:'IBM Plex Mono',monospace;font-size:.78em;font-weight:${fw};white-space:nowrap;">${f}</span>`;
-      // Soft separator κάθε 10
       if ((i+1) % 10 === 0 && i < allFish.length-1) {
         html += '<span style="width:100%;height:0;"></span>';
       }
@@ -1112,7 +1139,11 @@ function renderSectorTable(sName, flash=false, mode='live') {
   }
 
   let rows = '';
-  const emptyColspan = full ? (isFloat ? 7 : (twoList ? 8 : 7)) : (isFloat ? 4 : 5);
+  // Live: ΘΕΣΗ | ΑΘΛΗΤΗΣ | ΨΑΡΙΑ | 🐟 | Σ(cm) | Π×10 | ΣΥΝΟΛΟ | ΚΑΤ.ΑΤ. | [ΚΑΤ.ΟΜ.]
+  // Overall: ΘΕΣΗ | ΑΘΛΗΤΗΣ | 🐟 | Σ(cm) | Π×10 | ΣΥΝΟΛΟ | ΚΑΤ.ΑΤ. | [ΚΑΤ.ΟΜ.]
+  const emptyColspan = isFloat
+    ? (full ? (twoList?6:5) : (twoList?5:4))
+    : (full ? (twoList?8:7) : (twoList?9:8));
 
   // Live fish map (μόνο για live mode casting)
   const liveFish = (!full && !isFloat) ? buildLiveFish(sName) : {};
@@ -1129,27 +1160,27 @@ function renderSectorTable(sName, flash=false, mode='live') {
       const tied  = a.tied ? '<span class="tied">=</span>' : '';
 
       if (!full) {
+        const rankTeamF = twoList ? (a.sectorRankTeam!=null ? `<span style="color:var(--green);font-weight:700;">${a.sectorRankTeam}</span>` : '—') : '';
         return `<tr class="${rowc} ${newc}">
-          <td style="font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:.9em;color:var(--muted);width:38px;">${a.position}</td>
-          <td><div class="athlete-name">${a.lastname} ${a.firstname}</div>${a.club?`<div class="athlete-club">${a.club}</div>`:''}</td>
+          <td style="font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:.85em;color:var(--muted);width:36px;">${a.position}</td>
+          <td>${athleteCell(a)}</td>
           <td class="score-val">${a.totalWeight}<span class="score-unit"> gr</span></td>
           <td class="sub-score">${a.maxFish>0?a.maxFish+' gr':'—'}</td>
-          <td class="rank-cell ${rkc}" style="width:40px;">${medal}${tied}</td>
+          <td class="sub-score" style="text-align:center;color:var(--cyan);font-weight:700;">${rank}</td>
+          ${twoList ? `<td class="sub-score" style="text-align:center;color:var(--green);font-weight:700;">${rankTeamF}</td>` : ''}
         </tr>`;
       }
-      // Full columns — float
-      const rankTeam = twoList ? (a.sectorRankTeam!=null ? `<span style="color:var(--green);">${a.sectorRankTeam}</span>` : '—') : '';
+      const rankTeam = twoList ? (a.sectorRankTeam!=null ? `<span style="color:var(--green);font-weight:700;">${a.sectorRankTeam}</span>` : '—') : '';
       return `<tr class="${rowc} ${newc}">
-        <td style="font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:.9em;color:var(--muted);width:38px;">${a.position}</td>
-        <td><div class="athlete-name">${a.lastname} ${a.firstname}${ptBadge(a)}</div><div class="athlete-club">${a.club||''}</div></td>
+        <td style="font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:.85em;color:var(--muted);width:38px;">${a.position}</td>
+        <td>${athleteCell(a)}</td>
         <td class="sub-score" style="text-align:center;">${a.maxFish>0?a.maxFish+' gr':'—'}</td>
         <td class="score-val">${a.totalWeight}<span class="score-unit"> gr</span></td>
         <td class="sub-score" style="text-align:center;color:var(--cyan);font-weight:700;">${rank}</td>
-        ${twoList ? `<td class="sub-score" style="text-align:center;">${rankTeam}</td>` : ''}
+        ${twoList ? `<td class="sub-score" style="text-align:center;color:var(--green);font-weight:700;">${rankTeam}</td>` : ''}
       </tr>`;
     }).join('');
   } else {
-    // Casting
     rows = rankings.map((a,i) => {
       const rank  = a.sectorRank ?? (i+1);
       const rkc   = rank===1?'rk1':rank===2?'rk2':rank===3?'rk3':'rko';
@@ -1162,33 +1193,34 @@ function renderSectorTable(sName, flash=false, mode='live') {
       const total = cm + px10;
 
       if (!full) {
-        // Live mode — ψάρια ένα-ένα
         const allFish = liveFish[a.position] || [];
+        const rankTeam = twoList
+          ? (a.sectorRankTeam!=null ? `<span style="color:var(--green);font-weight:700;">${a.sectorRankTeam}</span>` : '<span style="color:var(--muted);">—</span>')
+          : '';
         return `<tr class="${rowc} ${newc}">
-          <td style="font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:.9em;color:var(--muted);width:38px;vertical-align:top;padding-top:10px;">${a.position}</td>
-          <td style="vertical-align:top;padding-top:8px;">
-            <div class="athlete-name">${a.lastname} ${a.firstname}</div>
-            <div class="athlete-club">${a.club||''}</div>
-          </td>
-          <td style="vertical-align:top;padding:8px 6px;">${fishChips(allFish)}</td>
-          <td class="sub-score" style="text-align:center;vertical-align:top;padding-top:10px;">${fish}</td>
-          <td class="score-val" style="vertical-align:top;padding-top:10px;">${total}<span class="score-unit"> pt</span></td>
-          <td class="rank-cell ${rkc}" style="width:44px;vertical-align:top;padding-top:8px;">${medal}${a.tied?'<span class="tied">=</span>':''}</td>
+          <td style="font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:.85em;color:var(--muted);width:36px;vertical-align:top;padding-top:6px;">${a.position}</td>
+          <td style="vertical-align:top;">${athleteCell(a)}</td>
+          <td style="vertical-align:top;padding:4px 6px;">${fishChips(allFish)}</td>
+          <td class="sub-score" style="text-align:center;vertical-align:top;padding-top:6px;">${fish}</td>
+          <td class="sub-score" style="text-align:right;vertical-align:top;padding-top:6px;">${cm}</td>
+          <td class="sub-score" style="text-align:right;color:var(--muted);vertical-align:top;padding-top:6px;">${px10}</td>
+          <td class="score-val" style="vertical-align:top;padding-top:6px;">${total}<span class="score-unit"> pt</span></td>
+          <td class="sub-score" style="text-align:center;color:var(--cyan);font-weight:700;vertical-align:top;padding-top:6px;">${rank}</td>
+          ${twoList ? `<td class="sub-score" style="text-align:center;vertical-align:top;padding-top:6px;">${rankTeam}</td>` : ''}
         </tr>`;
       }
-      // Full columns — casting
       const rankTeam = twoList
         ? (a.sectorRankTeam!=null ? `<span style="color:var(--green);font-weight:700;">${a.sectorRankTeam}</span>` : '<span style="color:var(--muted);">—</span>')
         : '';
       return `<tr class="${rowc} ${newc}">
-        <td style="font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:.9em;color:var(--muted);width:38px;">${a.position}</td>
-        <td><div class="athlete-name">${a.lastname} ${a.firstname}${ptBadge(a)}</div><div class="athlete-club">${a.club||''}</div></td>
+        <td style="font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:.85em;color:var(--muted);width:38px;">${a.position}</td>
+        <td>${athleteCell(a)}</td>
         <td class="sub-score" style="text-align:center;">${fish}</td>
         <td class="sub-score" style="text-align:right;">${cm}</td>
         <td class="sub-score" style="text-align:right;color:var(--muted);">${px10}</td>
         <td class="score-val" style="font-weight:700;">${total}<span class="score-unit"> pt</span></td>
         <td class="sub-score" style="text-align:center;color:var(--cyan);font-weight:700;">${rank}</td>
-        ${twoList ? `<td class="sub-score" style="text-align:center;">${rankTeam}</td>` : ''}
+        ${twoList ? `<td class="sub-score" style="text-align:center;color:var(--green);font-weight:700;">${rankTeam}</td>` : ''}
       </tr>`;
     }).join('');
   }
@@ -1196,9 +1228,16 @@ function renderSectorTable(sName, flash=false, mode='live') {
   // Headers
   let hdrCols;
   if (!full) {
+    // Live: ψάρια + ίδιες κολώνες με overall
     hdrCols = isFloat
-      ? `<th style="text-align:right;">Βάρος</th><th style="text-align:right;">Max</th><th style="width:44px;"></th>`
-      : `<th>Ψάρια (cm)</th><th style="text-align:center;width:40px;">🐟</th><th style="text-align:right;">Σύνολο</th><th style="width:44px;">Κατ.</th>`;
+      ? `<th style="text-align:right;">Βάρος</th><th style="text-align:right;">Max</th><th style="width:44px;text-align:center;color:var(--cyan);">Κατ.Ατ.</th>${twoList?`<th style="text-align:center;color:var(--green);">Κατ.Ομ.</th>`:''}`
+      : `<th>Ψάρια (cm)</th>
+         <th style="text-align:center;width:36px;">🐟</th>
+         <th style="text-align:right;">Σ(cm)</th>
+         <th style="text-align:right;color:var(--muted);">Π×10</th>
+         <th style="text-align:right;">Σύνολο</th>
+         <th style="text-align:center;color:var(--cyan);">Κατ.Ατ.</th>
+         ${twoList?`<th style="text-align:center;color:var(--green);">Κατ.Ομ.</th>`:''}`;
   } else if (isFloat) {
     hdrCols = `
       <th style="text-align:center;">Max</th>
@@ -1215,20 +1254,22 @@ function renderSectorTable(sName, flash=false, mode='live') {
       ${twoList ? `<th style="text-align:center;color:var(--green);">Κατ.Ομ.</th>` : ''}`;
   }
 
+  const tableHtml = `<table class="rtable">
+      <thead><tr>
+        <th style="width:36px;">ΘΕΣΗ</th>
+        <th>ΑΘΛΗΤΗΣ</th>
+        ${hdrCols}
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+
   return `
     <div class="results-card">
       <div class="results-card-hdr">
         <span class="results-card-title">ΤΟΜΕΑΣ ${sName}</span>
         <div style="display:flex;gap:6px;align-items:center;">${virtBadge}${statusHtml}</div>
       </div>
-      <table class="rtable">
-        <thead><tr>
-          <th style="width:38px;">θΕΣΗ ΤΟΜΕΑ</th>
-          <th>Αθλητής</th>
-          ${hdrCols}
-        </tr></thead>
-        <tbody>${rows}</tbody>
-      </table>
+      <div class="overall-table-wrap">${tableHtml}</div>
     </div>`;
 }
 
