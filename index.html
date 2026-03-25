@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>🐟 Kritis Results v3</title>
+<title>🐟 Kritis Results v4</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
 
@@ -339,6 +339,7 @@ body {
   <button class="nav-tab active" id="tab-live" onclick="showView('live')">📡 Live</button>
   <button class="nav-tab" id="tab-overall" onclick="showView('overall')">🏆 Συνολική</button>
   <button class="nav-tab" id="tab-individual" onclick="showView('individual')">🥇 Ατομική</button>
+  <button class="nav-tab" id="tab-team" onclick="showView('team')">🏅 Ομαδική</button>
 </div>
 
 <!-- MAIN -->
@@ -389,7 +390,7 @@ async function loadRaces() {
   showLoading();
   try {
     const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/races?order=created_at.desc&limit=50`,
+      `${SUPABASE_URL}/rest/v1/races?is_active=eq.true&order=created_at.desc&limit=50`,
       { headers: HDR }
     );
     if (!res.ok) throw new Error(await res.text());
@@ -433,11 +434,14 @@ async function selectRace(id) {
 
   // Meta chips
   const gt = currentRace.game_type === 'float' ? '🎣 Float' : '🎯 Casting';
+  const rm = currentRace.rankMode || 'split';
+  const rmLabel = rm==='unified'?'Ενιαία':rm==='separate'?'Ξεχωριστή':'Διαχωρισμένη';
   document.getElementById('raceMeta').innerHTML = `
     <span class="meta-chip gt">${gt}</span>
     <span class="meta-chip">📍 ${currentRace.race_location||'—'}</span>
     <span class="meta-chip">📅 ${currentRace.race_date||'—'}</span>
     <span class="meta-chip">Αγ. ${currentRace.round_number}</span>
+    <span class="meta-chip">📊 ${rmLabel}</span>
   `;
 
   // Set default sector
@@ -495,33 +499,68 @@ function startPolling() {
 // ==========================================
 // CALCULATIONS
 // ==========================================
-function calcSectorRankings(sectorName) {
-  if (!currentRace) return [];
+
+// ── Helpers participationType ──
+function getPType(a) {
+  if (a.participationType) return a.participationType;
+  return a.omadiko ? 'AO' : 'A';
+}
+function isAtomikos(a)  { const t=getPType(a); return t==='A'||t==='AO'; }
+function isOmadikos(a)  { const t=getPType(a); return t==='O'||t==='AO'; }
+function getRankMode()  { return currentRace?.rankMode || 'split'; }
+function isTwoListMode(){ return getRankMode()!=='unified' && hasOmadikoi(); }
+function hasOmadikoi()  {
+  return (currentRace?.athletes||[]).some(a => isOmadikos(a));
+}
+// split: μόνο AO στην ομαδική | separate: O+AO στην ομαδική
+function teamFilter(a) {
+  const rm = getRankMode();
+  if (rm==='separate') return isOmadikos(a);
+  if (rm==='split')    return getPType(a)==='AO';
+  return true; // unified
+}
+
+// ── Score υπολογισμός ──
+function athleteScore(a, isFloat) {
+  if (isFloat) {
+    return { total: a.totalWeight||0, maxFish: a.maxFish||0 };
+  } else {
+    const total = (a.totalCm||0) + (a.totalFish||0)*10;
+    return { total, maxFish: a.maxCatch||0 };
+  }
+}
+
+// ── Βαθμολογία από measurements για έναν τομέα ──
+// Επιστρέφει map: position → {totalCm, totalFish, maxCatch, totalWeight, maxFish}
+function buildSectorScores(sectorName) {
   const isFloat = currentRace.game_type === 'float';
-  const sectorAthletes = (currentRace.athletes || []).filter(a => a.sector === sectorName);
-  const sectorMeas = measurements.filter(m => m.sector === sectorName && m.completed);
+  const sectorAthletes = (currentRace.athletes||[]).filter(a => a.sector===sectorName);
+  const sectorMeas = measurements.filter(m => m.sector===sectorName && m.completed);
 
   const totals = {};
   sectorAthletes.forEach(a => {
     totals[a.position] = {
       position:    a.position,
+      id:          a.id,
       lastname:    a.lastname  || '',
       firstname:   a.firstname || '',
       club:        a.club      || '',
-      totalCm:     0, totalFish: 0, maxCatch: 0,
-      totalWeight: 0, maxFish:   0, score: 0
+      participationType: getPType(a),
+      omadiko:     a.omadiko   || false,
+      totalCm: 0, totalFish: 0, maxCatch: 0,
+      totalWeight: 0, maxFish: 0
     };
   });
 
   sectorMeas.forEach(m => {
-    (m.athletes || []).forEach(a => {
+    (m.athletes||[]).forEach(a => {
       if (!totals[a.position]) return;
       if (isFloat) {
-        totals[a.position].totalWeight += (a.totalWeight || 0);
+        totals[a.position].totalWeight += (a.totalWeight||0);
         if ((a.maxFish||0) > totals[a.position].maxFish)
-          totals[a.position].maxFish = a.maxFish || 0;
+          totals[a.position].maxFish = a.maxFish||0;
       } else {
-        totals[a.position].totalCm   += (a.totalCm || 0);
+        totals[a.position].totalCm   += (a.totalCm||0);
         totals[a.position].totalFish += (a.fish ? a.fish.length : 0);
         const mx = a.fish?.length ? Math.max(...a.fish) : 0;
         if (mx > totals[a.position].maxCatch) totals[a.position].maxCatch = mx;
@@ -529,23 +568,146 @@ function calcSectorRankings(sectorName) {
     });
   });
 
+  // score = total για sorting
   Object.values(totals).forEach(a => {
-    a.score = isFloat ? a.totalWeight : a.totalCm + a.totalFish * 10;
+    a.score = isFloat ? a.totalWeight : a.totalCm + a.totalFish*10;
   });
 
-  const arr = Object.values(totals);
-  if (isFloat) {
-    arr.sort((a,b) => b.totalWeight !== a.totalWeight
-      ? b.totalWeight - a.totalWeight : b.maxFish - a.maxFish);
-  } else {
-    arr.sort((a,b) => {
-      if (b.score    !== a.score)     return b.score    - a.score;
-      if (b.totalFish!== a.totalFish) return b.totalFish- a.totalFish;
-      return b.maxCatch - a.maxCatch;
-    });
+  return totals; // map position→athlete
+}
+
+// ── Virtual sector borrowing ──
+// Επιστρέφει τους δανεικούς αθλητές από τον προηγούμενο τομέα
+// με τα scores τους, για σύγκριση στον τεχνητό τομέα
+function getBorrowedAthletes(virtualSector) {
+  if (!virtualSector?.isVirtual || !virtualSector.virtualPositions) return [];
+  const sectors = currentRace.sectors || [];
+  const vIdx = sectors.findIndex(s => s.name===virtualSector.name);
+  if (vIdx <= 0) return [];
+
+  const prevSectorName = sectors[vIdx-1].name;
+  const prevScores = buildSectorScores(prevSectorName);
+  const prevAthletes = Object.values(prevScores)
+    .sort((a,b) => (b.position||0)-(a.position||0)); // από τελευταία θέση
+
+  const diff = virtualSector.virtualPositions;
+
+  // Ίδια λογική με SFM scenario 6:
+  // Προτ.1: Α αθλητές (δεν μπλέκουν την ομαδική)
+  // Προτ.2: AO/O συλλόγων που ΔΕΝ υπάρχουν ήδη στον virtual
+  // Fallback: υπόλοιποι
+
+  const virtualScores = buildSectorScores(virtualSector.name);
+  const clubsInVirtual = new Set(
+    Object.values(virtualScores)
+      .filter(a => isOmadikos(a))
+      .map(a => a.club)
+  );
+
+  const p1 = prevAthletes.filter(a => !isOmadikos(a));
+  const p2 = prevAthletes.filter(a => isOmadikos(a) && !clubsInVirtual.has(a.club));
+  const p3 = prevAthletes.filter(a => isOmadikos(a) &&  clubsInVirtual.has(a.club));
+
+  return [...p1, ...p2, ...p3]
+    .slice(0, diff)
+    .map(a => ({...a, _borrowed: true}));
+}
+
+// ── Κατάταξη τομέα (sectorRank + sectorRankTeam) ──
+// Επιστρέφει array αθλητών με rank, rankTeam, tied, tiedTeam
+function calcSectorRankings(sectorName) {
+  if (!currentRace) return [];
+  const isFloat   = currentRace.game_type === 'float';
+  const rankMode  = getRankMode();
+  const twoList   = isTwoListMode();
+  const sectors   = currentRace.sectors || [];
+  const sector    = sectors.find(s => s.name===sectorName);
+
+  // Βαθμολογίες πραγματικών αθλητών
+  const scores = buildSectorScores(sectorName);
+  let realAthletes = Object.values(scores);
+
+  // Δανεικοί για virtual τομέα
+  let borrowed = [];
+  if (sector?.isVirtual) {
+    borrowed = getBorrowedAthletes(sector);
   }
 
-  return applyRanks(arr, isFloat);
+  // compareList = πραγματικοί + δανεικοί (για δίκαια σύγκριση)
+  const compareList = [...realAthletes, ...borrowed];
+
+  // ── ΑΤΟΜΙΚΗ κατάταξη τομέα ──
+  let listAtomiki = twoList ? compareList.filter(a => isAtomikos(a)) : compareList;
+  listAtomiki = listAtomiki.map(a => ({...a, ...athleteScore(a, isFloat)}));
+
+  listAtomiki.sort((x,y) => {
+    if (Math.abs(y.total-x.total)>0.001) return y.total-x.total;
+    return (y.maxFish||0)-(x.maxFish||0);
+  });
+
+  const rankedAtomiki = applyRankList(listAtomiki, isFloat);
+
+  // Γράψε sectorRank στους πραγματικούς
+  rankedAtomiki.forEach(e => {
+    if (!e._borrowed) {
+      const r = scores[e.position];
+      if (r) r.sectorRank = e.rank;
+    }
+  });
+
+  // ── ΟΜΑΔΙΚΗ κατάταξη τομέα ──
+  if (rankMode==='unified') {
+    // Ίδια με ατομική
+    Object.values(scores).forEach(a => { a.sectorRankTeam = a.sectorRank; });
+  } else if (twoList) {
+    let listTeam = compareList.filter(a => teamFilter(a));
+    listTeam = listTeam.map(a => ({...a, ...athleteScore(a, isFloat)}));
+    listTeam.sort((x,y) => {
+      if (Math.abs(y.total-x.total)>0.001) return y.total-x.total;
+      return (y.maxFish||0)-(x.maxFish||0);
+    });
+    const rankedTeam = applyRankList(listTeam, isFloat);
+    rankedTeam.forEach(e => {
+      if (!e._borrowed) {
+        const r = scores[e.position];
+        if (r) r.sectorRankTeam = e.rank;
+      } else {
+        // Δανεικός — αποθήκευσε rank στο borrowed object (για team calc)
+        const bobj = borrowed.find(b => b.position===e.position && b.id===e.id);
+        if (bobj) bobj._borrowedRankTeam = e.rank;
+      }
+    });
+    // Καθαρισμός: αθλητές που δεν είναι στην ομαδική παίρνουν null
+    Object.values(scores).forEach(a => {
+      if (!teamFilter(a)) a.sectorRankTeam = null;
+    });
+  } else {
+    Object.values(scores).forEach(a => { a.sectorRankTeam = a.sectorRank; });
+  }
+
+  // Επιστρέφει μόνο πραγματικούς (για render), με borrowed annotations
+  const result = Object.values(scores);
+  // Attach borrowed για χρήση στο team ranking
+  result._borrowed = borrowed;
+  return result;
+}
+
+// Rank helper — ίδια λογική floor/ceil με SFM
+function applyRankList(arr, isFloat) {
+  const out=[]; let i=0;
+  while (i<arr.length) {
+    let j=i+1;
+    while (j<arr.length &&
+      Math.abs(arr[j].total-arr[i].total)<0.001 &&
+      Math.abs((arr[j].maxFish||0)-(arr[i].maxFish||0))<0.001) j++;
+    const cnt=j-i;
+    const hasScore = arr[i].total>0;
+    let sum=0; for(let k=0;k<cnt;k++) sum+=i+1+k;
+    const rank = cnt===1 ? i+1 : hasScore ? Math.floor(sum/cnt) : Math.ceil(sum/cnt);
+    for(let k=i;k<j;k++) out.push({...arr[k], rank, tied:cnt>1});
+    i=j;
+  }
+  return out;
 }
 
 function isTied(a, b, isFloat) {
@@ -576,7 +738,6 @@ function getCompletedCount(sectorName) {
 }
 
 function getTotalMeasurements() {
-  // For casting: 10, for float: 1
   return currentRace?.game_type === 'float' ? 1 : 10;
 }
 
@@ -590,59 +751,132 @@ function getGlobalProgress() {
   return { done, total };
 }
 
+// ==========================================
+// ΟΜΑΔΙΚΗ ΚΑΤΑΤΑΞΗ
+// ==========================================
+function calcTeamRanking() {
+  if (!currentRace) return [];
+  const isFloat   = currentRace.game_type === 'float';
+  const twoList   = isTwoListMode();
+  const sectors   = currentRace.sectors || [];
+  const numSectors= sectors.length;
+  const dropWorst = parseInt(currentRace.dropWorst ?? 1);
+  const pegsPerSector = currentRace.pegsPerSector || 5;
+  const penaltyRank   = pegsPerSector + 1;
+
+  // Υπολόγισε όλους τους τομείς και μάζεψε scores + borrowed
+  const allBorrowed = []; // {club, sectorRankTeam, ...athlete}
+  const clubMap = {};    // club → [athletes with sectorRankTeam]
+
+  sectors.forEach(s => {
+    const ranked = calcSectorRankings(s.name);
+    // Πραγματικοί αθλητές
+    ranked.forEach(a => {
+      if (!teamFilter(a)) return;
+      const club = a.club || '(Χωρίς Σύλλογο)';
+      if (!clubMap[club]) clubMap[club] = [];
+      clubMap[club].push({
+        ...a,
+        sectorName: s.name,
+        _rankForTeam: twoList ? (a.sectorRankTeam ?? penaltyRank) : (a.sectorRank ?? penaltyRank),
+        _score:       isFloat ? (a.totalWeight||0) : (a.totalCm||0)+(a.totalFish||0)*10
+      });
+    });
+    // Δανεικοί από virtual τομέα
+    if (ranked._borrowed) {
+      ranked._borrowed.forEach(b => {
+        if (!teamFilter(b) || !b._borrowedRankTeam) return;
+        const club = b.club || '(Χωρίς Σύλλογο)';
+        if (!clubMap[club]) clubMap[club] = [];
+        clubMap[club].push({
+          ...b,
+          sectorName: s.name,
+          _isBorrowed: true,
+          _rankForTeam: b._borrowedRankTeam,
+          _score:       isFloat ? (b.totalWeight||0) : (b.totalCm||0)+(b.totalFish||0)*10
+        });
+      });
+    }
+  });
+
+  if (!Object.keys(clubMap).length) return [];
+
+  const teams = Object.entries(clubMap).map(([club, members]) => {
+    // Ταξινόμηση: χειρότερος rank πρώτος (για drop)
+    const sorted = [...members].sort((a,b) => {
+      if (b._rankForTeam!==a._rankForTeam) return b._rankForTeam-a._rankForTeam;
+      return a._score-b._score;
+    });
+
+    const canDrop = members.length >= numSectors;
+    const effDrop = canDrop ? (dropWorst||1) : 0;
+    const dropped  = effDrop>0 ? sorted.slice(0,effDrop)   : [];
+    const counting = effDrop>0 ? sorted.slice(effDrop)      : sorted;
+    const teamScore = counting.reduce((s,a) => s+a._rankForTeam, 0);
+    const teamTotal = counting.reduce((s,a) => s+a._score, 0);
+    return { club, members, counting, dropped, teamScore, teamTotal, canDrop };
+  });
+
+  teams.sort((a,b) => a.teamScore!==b.teamScore ? a.teamScore-b.teamScore : b.teamTotal-a.teamTotal);
+
+  let pos=1,i=0;
+  while (i<teams.length) {
+    let j=i;
+    while (j<teams.length &&
+      teams[j].teamScore===teams[i].teamScore &&
+      Math.abs(teams[j].teamTotal-teams[i].teamTotal)<0.001) j++;
+    const cnt=j-i;
+    let sum=0; for(let k=0;k<cnt;k++) sum+=pos+k;
+    const rank=cnt===1?pos:Math.floor(sum/cnt);
+    for(let k=i;k<j;k++) teams[k].teamRank=rank;
+    pos+=cnt; i=j;
+  }
+  return teams;
+}
+
 
 // ==========================================
 // ΑΤΟΜΙΚΗ ΚΑΤΑΤΑΞΗ ΑΓΩΝΑ
 // ==========================================
 function getParticipationType(athlete) {
-  // v1.2+: participationType field
-  if (athlete.participationType) return athlete.participationType;
-  // v1.1 fallback: omadiko boolean
-  return athlete.omadiko ? 'AO' : 'A';
+  return getPType(athlete);
 }
 
 function calcIndividualRankings() {
   if (!currentRace) return [];
-  const isFloat = currentRace.game_type === 'float';
-  const sectors = currentRace.sectors || [];
+  const isFloat  = currentRace.game_type === 'float';
+  const twoList  = isTwoListMode();
+  const sectors  = currentRace.sectors || [];
 
-  // Βήμα 1: Υπολόγισε κατάταξη ανά τομέα (μόνο A + AO)
   const allAthletes = [];
 
   sectors.forEach(s => {
     const rankings = calcSectorRankings(s.name);
-    // Φιλτράρισμα: μόνο A και AO μετράνε στην ατομική
-    const sectorAthletes = (currentRace.athletes || []).filter(a => a.sector === s.name);
 
     rankings.forEach(r => {
-      // Βρες τον αθλητή στο raceData για participationType
-      const raceAthlete = sectorAthletes.find(a => a.position === r.position);
-      const ptype = raceAthlete ? getParticipationType(raceAthlete) : 'A';
-
-      // Μόνο A και AO στην ατομική
-      if (ptype === 'O') return;
+      const ptype = getPType(r);
+      // unified: όλοι | split/separate: μόνο A+AO
+      if (twoList && ptype==='O') return;
 
       allAthletes.push({
         ...r,
-        sector:          s.name,
-        points:          r.rank,        // βαθμοί = θέση στον τομέα
+        sector:           s.name,
+        points:           r.sectorRank,   // βαθμοί = θέση τομέα ατομικής
         participationType: ptype
       });
     });
   });
 
-  // Βήμα 2: Ταξινόμηση
-  // 1ο: βαθμοί (λιγότεροι = καλύτεροι)
-  // 2ο: σκορ (casting: totalCm+fish*10, float: totalWeight) — περισσότερο = καλύτερο
-  // 3ο: πλήθος ψαριών (casting) / max ψάρι (float) — περισσότερο = καλύτερο
+  // Ταξινόμηση: βαθμοί ASC → score DESC → maxFish DESC
   allAthletes.sort((a, b) => {
     if (a.points !== b.points) return a.points - b.points;
-    if (b.score  !== a.score)  return b.score  - a.score;
-    if (isFloat) return b.maxFish    - a.maxFish;
-    else         return b.totalFish  - a.totalFish;
+    const sA = isFloat ? (a.totalWeight||0) : (a.totalCm||0)+(a.totalFish||0)*10;
+    const sB = isFloat ? (b.totalWeight||0) : (b.totalCm||0)+(b.totalFish||0)*10;
+    if (sB !== sA) return sB - sA;
+    if (isFloat) return (b.maxFish||0)-(a.maxFish||0);
+    return (b.maxCatch||0)-(a.maxCatch||0);
   });
 
-  // Βήμα 3: Απόδοση θέσεων με ισοβαθμία
   return applyIndividualRanks(allAthletes, isFloat);
 }
 
@@ -731,7 +965,7 @@ function renderIndividual() {
           <tbody>${rows}</tbody>
         </table>
       </div>
-      <div class="footer">Kritis Results v3 · Ατομική Κατάταξη</div>
+      <div class="footer">Kritis Results v4 · Ατομική Κατάταξη</div>
     </div>`;
 }
 
@@ -750,6 +984,7 @@ function renderCurrentView(flashSector) {
   if (currentView==='live')       renderLive(flashSector);
   if (currentView==='overall')    renderOverall();
   if (currentView==='individual') renderIndividual();
+  if (currentView==='team')       renderTeam();
 }
 
 // ── LIVE VIEW ──
@@ -814,6 +1049,10 @@ function renderOverall() {
 // ── SECTOR TABLE ──
 function renderSectorTable(sName, flash=false, compact=false) {
   const isFloat  = currentRace.game_type === 'float';
+  const twoList  = isTwoListMode();
+  const sectors  = currentRace.sectors || [];
+  const sector   = sectors.find(s => s.name===sName);
+  const isVirt   = sector?.isVirtual || false;
   const rankings = calcSectorRankings(sName);
   const done     = getCompletedCount(sName);
   const tot      = getTotalMeasurements();
@@ -821,18 +1060,23 @@ function renderSectorTable(sName, flash=false, compact=false) {
   const statusHtml = done < tot
     ? `<span class="inc-badge">⏳ ${done}/${tot}</span>`
     : `<span class="done-badge">✅ Ολοκλ.</span>`;
+  const virtBadge = isVirt
+    ? `<span class="meta-chip" style="background:rgba(255,165,0,0.15);border-color:rgba(255,165,0,0.4);color:orange;">⚡ Τεχνητός</span>`
+    : '';
 
   let rows = '';
   if (rankings.length === 0) {
     rows = `<tr><td colspan="4" style="text-align:center;padding:18px;color:var(--muted);font-size:.85em;">Δεν υπάρχουν ακόμα καταμετρήσεις</td></tr>`;
   } else if (isFloat) {
     rows = rankings.map((a,i) => {
-      const rkc   = a.rank===1?'rk1':a.rank===2?'rk2':a.rank===3?'rk3':'rko';
-      const medal = a.rank===1?'🥇':a.rank===2?'🥈':a.rank===3?'🥉':a.rank;
-      const rowc  = a.rank<=3?`r${a.rank}`:'';
+      const rank  = a.sectorRank ?? a.rank ?? (i+1);
+      const rkc   = rank===1?'rk1':rank===2?'rk2':rank===3?'rk3':'rko';
+      const medal = rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':rank;
+      const rowc  = rank<=3?`r${rank}`:'';
       const newc  = flash && i===0 ? 'row-new' : '';
+      const tied  = a.tied ? '<span class="tied">=</span>' : '';
       return `<tr class="${rowc} ${newc}">
-        <td class="rank-cell ${rkc}">${medal}${a.tied?'<span class="tied">=</span>':''}</td>
+        <td class="rank-cell ${rkc}">${medal}${tied}</td>
         <td><div class="athlete-name">${a.lastname} ${a.firstname}</div>${a.club?`<div class="athlete-club">${a.club}</div>`:''}</td>
         <td class="score-val">${a.totalWeight}<span class="score-unit"> gr</span></td>
         <td class="sub-score" style="color:${a.tied?'var(--cyan)':'var(--muted)'};">${a.maxFish>0?a.maxFish+' gr':'—'}</td>
@@ -840,17 +1084,18 @@ function renderSectorTable(sName, flash=false, compact=false) {
     }).join('');
   } else {
     rows = rankings.map((a,i) => {
-      const rkc   = a.rank===1?'rk1':a.rank===2?'rk2':a.rank===3?'rk3':'rko';
-      const medal = a.rank===1?'🥇':a.rank===2?'🥈':a.rank===3?'🥉':a.rank;
-      const rowc  = a.rank<=3?`r${a.rank}`:'';
+      const rank  = a.sectorRank ?? a.rank ?? (i+1);
+      const rkc   = rank===1?'rk1':rank===2?'rk2':rank===3?'rk3':'rko';
+      const medal = rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':rank;
+      const rowc  = rank<=3?`r${rank}`:'';
       const newc  = flash && i===0 ? 'row-new' : '';
-      // Show maxCatch only when tied
-      const showMax = a.tied && a.maxCatch > 0;
+      const showMax = a.tied && (a.maxCatch||0) > 0;
+      const score = (a.totalCm||0) + (a.totalFish||0)*10;
       return `<tr class="${rowc} ${newc}">
         <td class="rank-cell ${rkc}">${medal}${a.tied?'<span class="tied">=</span>':''}</td>
         <td><div class="athlete-name">${a.lastname} ${a.firstname}</div>${a.club?`<div class="athlete-club">${a.club}</div>`:''}</td>
-        <td class="sub-score" style="text-align:center;">${a.totalFish}${showMax?` <span style="color:var(--cyan);font-size:.7em;">max:${a.maxCatch}cm</span>`:''}</td>
-        <td class="score-val">${a.score}<span class="score-unit"> pt</span></td>
+        <td class="sub-score" style="text-align:center;">${a.totalFish||0}${showMax?` <span style="color:var(--cyan);font-size:.7em;">max:${a.maxCatch}cm</span>`:''}</td>
+        <td class="score-val">${score}<span class="score-unit"> pt</span></td>
       </tr>`;
     }).join('');
   }
@@ -863,7 +1108,7 @@ function renderSectorTable(sName, flash=false, compact=false) {
     <div class="results-card">
       <div class="results-card-hdr">
         <span class="results-card-title">ΤΟΜΕΑΣ ${sName}</span>
-        ${statusHtml}
+        <div style="display:flex;gap:6px;align-items:center;">${virtBadge}${statusHtml}</div>
       </div>
       <table class="rtable">
         <thead><tr><th style="width:38px;">#</th><th>Αθλητής</th>${hdrCols}</tr></thead>
@@ -872,10 +1117,117 @@ function renderSectorTable(sName, flash=false, compact=false) {
     </div>`;
 }
 
+// ── TEAM VIEW ──
+function renderTeam() {
+  const main    = document.getElementById('mainContent');
+  const isFloat = currentRace.game_type === 'float';
+  const twoList = isTwoListMode();
+
+  if (!twoList && getRankMode()==='unified') {
+    main.innerHTML = `<div class="center-state">
+      <div class="state-icon">🏅</div>
+      <div class="state-title">Ενιαία Κατάταξη</div>
+      <div class="state-text">Ο αγώνας χρησιμοποιεί ενιαία κατάταξη — δεν υπάρχει ξεχωριστή ομαδική.</div>
+    </div>`;
+    return;
+  }
+
+  const teams = calcTeamRanking();
+
+  if (!teams.length) {
+    main.innerHTML = `<div class="center-state">
+      <div class="state-icon">🏅</div>
+      <div class="state-title">Δεν υπάρχουν ομαδικοί</div>
+      <div class="state-text">Δεν υπάρχουν αθλητές τύπου AO ή O στον αγώνα.</div>
+    </div>`;
+    return;
+  }
+
+  const medals  = {1:'🥇',2:'🥈',3:'🥉'};
+  const rmLabel = getRankMode()==='split' ? 'μόνο AO' : 'O + AO';
+  let html = `<div id="teamView">
+    <div class="results-card" style="margin-bottom:14px;">
+      <div class="results-card-hdr">
+        <span class="results-card-title">ΟΜΑΔΙΚΗ ΚΑΤΑΤΑΞΗ</span>
+        <span class="meta-chip gt">👥 ${rmLabel}</span>
+      </div>
+      <table class="rtable">
+        <thead><tr>
+          <th style="width:38px;">#</th>
+          <th>Σύλλογος</th>
+          <th style="text-align:center;width:55px;">Αθλητές</th>
+          <th style="text-align:center;color:var(--gold);">Σκορ</th>
+          <th style="text-align:right;">${isFloat?'Βάρος':'Σύνολο'}</th>
+        </tr></thead>
+        <tbody>`;
+
+  teams.forEach(t => {
+    const medal = medals[t.teamRank]||t.teamRank;
+    const rowc  = t.teamRank<=3?`r${t.teamRank}`:'';
+    const rkc   = t.teamRank===1?'rk1':t.teamRank===2?'rk2':t.teamRank===3?'rk3':'rko';
+    const dropNote = t.canDrop && t.dropped.length
+      ? `<span style="font-size:.68em;color:var(--muted);margin-left:4px;">-${t.dropped.length} χειρ.</span>`
+      : '';
+    const totalDisp = isFloat
+      ? `${t.teamTotal} gr`
+      : t.teamTotal.toFixed(1);
+    html += `<tr class="${rowc}" style="cursor:pointer;" onclick="toggleTeamDetail('club_${t.teamRank}')">
+      <td class="rank-cell ${rkc}">${medal}</td>
+      <td><div class="athlete-name">${t.club}${dropNote}</div>
+          <div class="athlete-club">${t.counting.length}/${t.members.length} αθλητές μετρούν</div></td>
+      <td style="text-align:center;">${t.members.length}</td>
+      <td class="sub-score" style="text-align:center;color:var(--gold);">${t.teamScore}</td>
+      <td class="score-val">${totalDisp}</td>
+    </tr>
+    <tr id="club_${t.teamRank}" style="display:none;">
+      <td colspan="5" style="padding:0;">
+        <div style="background:rgba(0,200,224,0.04);border-top:1px solid var(--border);padding:8px 12px;">
+          <table class="rtable" style="font-size:.8em;">
+            <thead><tr>
+              <th>Αθλητής</th>
+              <th style="text-align:center;width:50px;">Τύπος</th>
+              <th style="text-align:center;width:55px;">Τομέας</th>
+              <th style="text-align:center;width:60px;">Κατ.Τομ.</th>
+              <th style="text-align:right;">${isFloat?'Βάρος':'Σκορ'}</th>
+              <th style="text-align:center;width:70px;">Μετράει</th>
+            </tr></thead>
+            <tbody>`;
+
+    [...t.counting, ...t.dropped].forEach(a => {
+      const isDropped = t.dropped.includes(a);
+      const ptColors  = {AO:'var(--gold)',A:'var(--cyan)',O:'var(--green)'};
+      const pt        = getPType(a);
+      const scoreDisp = isFloat ? `${a.totalWeight||0} gr` : ((a.totalCm||0)+(a.totalFish||0)*10).toFixed(1);
+      const rankDisp  = a._rankForTeam || '—';
+      const borrowedBadge = a._isBorrowed ? `<span style="background:rgba(255,165,0,0.2);color:orange;font-size:.65em;padding:1px 4px;border-radius:3px;margin-left:4px;">★</span>` : '';
+      html += `<tr style="${isDropped?'opacity:0.45;':''}">
+        <td>${a.lastname} ${a.firstname}${borrowedBadge}</td>
+        <td style="text-align:center;"><span style="background:${ptColors[pt]||'var(--muted)'};color:var(--navy);padding:1px 5px;border-radius:3px;font-size:.7em;font-weight:700;">${pt}</span></td>
+        <td style="text-align:center;font-weight:700;">${a.sectorName||'—'}</td>
+        <td style="text-align:center;color:var(--cyan);font-weight:700;">${rankDisp}</td>
+        <td style="text-align:right;color:var(--cyan);">${scoreDisp}</td>
+        <td style="text-align:center;">${isDropped?'❌':'✅'}</td>
+      </tr>`;
+    });
+
+    html += `</tbody></table></div></td></tr>`;
+  });
+
+  html += `</tbody></table></div>
+    <div class="footer">Kritis Results v4 · Ομαδική Κατάταξη</div>
+  </div>`;
+  main.innerHTML = html;
+}
+
+function toggleTeamDetail(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.style.display = el.style.display==='none' ? 'table-row' : 'none';
+}
+
 function selectSector(name) {
   currentSector = name;
   renderLive();
-  // Update chips
   document.querySelectorAll('.sector-chip').forEach(c => {
     c.classList.toggle('active', c.textContent.trim().startsWith(name));
   });
