@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>🐟 Kritis Results v4</title>
+<title>🐟 Kritis Results v5</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
 
@@ -965,7 +965,7 @@ function renderIndividual() {
           <tbody>${rows}</tbody>
         </table>
       </div>
-      <div class="footer">Kritis Results v4 · Ατομική Κατάταξη</div>
+      <div class="footer">Kritis Results v5 · Ατομική Κατάταξη</div>
     </div>`;
 }
 
@@ -1025,7 +1025,7 @@ function renderLive(flashSector) {
   // Rankings for current sector
   const sName = currentSector || sectors[0]?.name;
   if (sName) {
-    html += renderSectorTable(sName, flashSector === sName);
+    html += renderSectorTable(sName, flashSector === sName, 'live');
   }
 
   html += '<div class="footer">Kritis Results v3 · Live</div></div>';
@@ -1039,15 +1039,16 @@ function renderOverall() {
   let html = '<div id="overallView">';
 
   sectors.forEach(s => {
-    html += renderSectorTable(s.name, false, true);
+    html += renderSectorTable(s.name, false, 'overall');
   });
 
-  html += '<div class="footer">Kritis Results v3</div></div>';
+  html += '<div class="footer">Kritis Results v5</div></div>';
   main.innerHTML = html;
 }
 
 // ── SECTOR TABLE ──
-function renderSectorTable(sName, flash=false, compact=false) {
+// mode: 'live' (compact) | 'overall' (full columns)
+function renderSectorTable(sName, flash=false, mode='live') {
   const isFloat  = currentRace.game_type === 'float';
   const twoList  = isTwoListMode();
   const sectors  = currentRace.sectors || [];
@@ -1056,6 +1057,7 @@ function renderSectorTable(sName, flash=false, compact=false) {
   const rankings = calcSectorRankings(sName);
   const done     = getCompletedCount(sName);
   const tot      = getTotalMeasurements();
+  const full     = mode === 'overall';
 
   const statusHtml = done < tot
     ? `<span class="inc-badge">⏳ ${done}/${tot}</span>`
@@ -1064,45 +1066,106 @@ function renderSectorTable(sName, flash=false, compact=false) {
     ? `<span class="meta-chip" style="background:rgba(255,165,0,0.15);border-color:rgba(255,165,0,0.4);color:orange;">⚡ Τεχνητός</span>`
     : '';
 
+  // pType badge
+  function ptBadge(a) {
+    const pt = getPType(a);
+    const c  = {AO:'var(--gold)',A:'var(--cyan)',O:'var(--green)'};
+    return `<span style="background:${c[pt]||'var(--muted)'};color:var(--navy);padding:1px 4px;border-radius:3px;font-size:.65em;font-weight:700;margin-left:3px;">${pt}</span>`;
+  }
+
   let rows = '';
+  const emptyColspan = full ? (isFloat ? 7 : (twoList ? 8 : 7)) : 4;
+
   if (rankings.length === 0) {
-    rows = `<tr><td colspan="4" style="text-align:center;padding:18px;color:var(--muted);font-size:.85em;">Δεν υπάρχουν ακόμα καταμετρήσεις</td></tr>`;
+    rows = `<tr><td colspan="${emptyColspan}" style="text-align:center;padding:18px;color:var(--muted);font-size:.85em;">Δεν υπάρχουν ακόμα καταμετρήσεις</td></tr>`;
   } else if (isFloat) {
     rows = rankings.map((a,i) => {
-      const rank  = a.sectorRank ?? a.rank ?? (i+1);
+      const rank  = a.sectorRank ?? (i+1);
       const rkc   = rank===1?'rk1':rank===2?'rk2':rank===3?'rk3':'rko';
       const medal = rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':rank;
       const rowc  = rank<=3?`r${rank}`:'';
       const newc  = flash && i===0 ? 'row-new' : '';
       const tied  = a.tied ? '<span class="tied">=</span>' : '';
+
+      if (!full) {
+        return `<tr class="${rowc} ${newc}">
+          <td class="rank-cell ${rkc}">${medal}${tied}</td>
+          <td><div class="athlete-name">${a.lastname} ${a.firstname}</div>${a.club?`<div class="athlete-club">${a.club}</div>`:''}</td>
+          <td class="score-val">${a.totalWeight}<span class="score-unit"> gr</span></td>
+          <td class="sub-score">${a.maxFish>0?a.maxFish+' gr':'—'}</td>
+        </tr>`;
+      }
+      // Full columns — float
+      const rankTeam = twoList ? (a.sectorRankTeam!=null ? `<span style="color:var(--green);">${a.sectorRankTeam}</span>` : '—') : '';
       return `<tr class="${rowc} ${newc}">
         <td class="rank-cell ${rkc}">${medal}${tied}</td>
-        <td><div class="athlete-name">${a.lastname} ${a.firstname}</div>${a.club?`<div class="athlete-club">${a.club}</div>`:''}</td>
+        <td><div class="athlete-name">${a.lastname} ${a.firstname}${ptBadge(a)}</div><div class="athlete-club">${a.club||''}</div></td>
+        <td class="sub-score" style="text-align:center;">${a.maxFish>0?a.maxFish+' gr':'—'}</td>
         <td class="score-val">${a.totalWeight}<span class="score-unit"> gr</span></td>
-        <td class="sub-score" style="color:${a.tied?'var(--cyan)':'var(--muted)'};">${a.maxFish>0?a.maxFish+' gr':'—'}</td>
+        <td class="sub-score" style="text-align:center;color:var(--cyan);font-weight:700;">${rank}</td>
+        ${twoList ? `<td class="sub-score" style="text-align:center;">${rankTeam}</td>` : ''}
       </tr>`;
     }).join('');
   } else {
+    // Casting
     rows = rankings.map((a,i) => {
-      const rank  = a.sectorRank ?? a.rank ?? (i+1);
+      const rank  = a.sectorRank ?? (i+1);
       const rkc   = rank===1?'rk1':rank===2?'rk2':rank===3?'rk3':'rko';
       const medal = rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':rank;
       const rowc  = rank<=3?`r${rank}`:'';
       const newc  = flash && i===0 ? 'row-new' : '';
-      const showMax = a.tied && (a.maxCatch||0) > 0;
-      const score = (a.totalCm||0) + (a.totalFish||0)*10;
+      const fish  = a.totalFish || 0;
+      const cm    = a.totalCm   || 0;
+      const px10  = fish * 10;
+      const total = cm + px10;
+
+      if (!full) {
+        const showMax = a.tied && (a.maxCatch||0) > 0;
+        return `<tr class="${rowc} ${newc}">
+          <td class="rank-cell ${rkc}">${medal}${a.tied?'<span class="tied">=</span>':''}</td>
+          <td><div class="athlete-name">${a.lastname} ${a.firstname}</div>${a.club?`<div class="athlete-club">${a.club}</div>`:''}</td>
+          <td class="sub-score" style="text-align:center;">${fish}${showMax?` <span style="color:var(--cyan);font-size:.7em;">max:${a.maxCatch}cm</span>`:''}</td>
+          <td class="score-val">${total}<span class="score-unit"> pt</span></td>
+        </tr>`;
+      }
+      // Full columns — casting
+      const rankTeam = twoList
+        ? (a.sectorRankTeam!=null ? `<span style="color:var(--green);font-weight:700;">${a.sectorRankTeam}</span>` : '<span style="color:var(--muted);">—</span>')
+        : '';
       return `<tr class="${rowc} ${newc}">
         <td class="rank-cell ${rkc}">${medal}${a.tied?'<span class="tied">=</span>':''}</td>
-        <td><div class="athlete-name">${a.lastname} ${a.firstname}</div>${a.club?`<div class="athlete-club">${a.club}</div>`:''}</td>
-        <td class="sub-score" style="text-align:center;">${a.totalFish||0}${showMax?` <span style="color:var(--cyan);font-size:.7em;">max:${a.maxCatch}cm</span>`:''}</td>
-        <td class="score-val">${score}<span class="score-unit"> pt</span></td>
+        <td><div class="athlete-name">${a.lastname} ${a.firstname}${ptBadge(a)}</div><div class="athlete-club">${a.club||''}</div></td>
+        <td class="sub-score" style="text-align:center;">${fish}</td>
+        <td class="sub-score" style="text-align:right;">${cm}</td>
+        <td class="sub-score" style="text-align:right;color:var(--muted);">${px10}</td>
+        <td class="score-val" style="font-weight:700;">${total}<span class="score-unit"> pt</span></td>
+        <td class="sub-score" style="text-align:center;color:var(--cyan);font-weight:700;">${rank}</td>
+        ${twoList ? `<td class="sub-score" style="text-align:center;">${rankTeam}</td>` : ''}
       </tr>`;
     }).join('');
   }
 
-  const hdrCols = isFloat
-    ? `<th style="text-align:right;">Βάρος</th><th style="text-align:right;">Max</th>`
-    : `<th style="text-align:center;">Ψάρια</th><th style="text-align:right;">Σκορ</th>`;
+  // Headers
+  let hdrCols;
+  if (!full) {
+    hdrCols = isFloat
+      ? `<th style="text-align:right;">Βάρος</th><th style="text-align:right;">Max</th>`
+      : `<th style="text-align:center;">🐟</th><th style="text-align:right;">Σύνολο</th>`;
+  } else if (isFloat) {
+    hdrCols = `
+      <th style="text-align:center;">Max</th>
+      <th style="text-align:right;">Βάρος</th>
+      <th style="text-align:center;color:var(--cyan);">Κατ.Ατ.</th>
+      ${twoList ? `<th style="text-align:center;color:var(--green);">Κατ.Ομ.</th>` : ''}`;
+  } else {
+    hdrCols = `
+      <th style="text-align:center;">🐟</th>
+      <th style="text-align:right;">Σ(cm)</th>
+      <th style="text-align:right;color:var(--muted);">Π×10</th>
+      <th style="text-align:right;">Σύνολο</th>
+      <th style="text-align:center;color:var(--cyan);">Κατ.Ατ.</th>
+      ${twoList ? `<th style="text-align:center;color:var(--green);">Κατ.Ομ.</th>` : ''}`;
+  }
 
   return `
     <div class="results-card">
@@ -1111,7 +1174,11 @@ function renderSectorTable(sName, flash=false, compact=false) {
         <div style="display:flex;gap:6px;align-items:center;">${virtBadge}${statusHtml}</div>
       </div>
       <table class="rtable">
-        <thead><tr><th style="width:38px;">#</th><th>Αθλητής</th>${hdrCols}</tr></thead>
+        <thead><tr>
+          <th style="width:38px;">#</th>
+          <th>Αθλητής</th>
+          ${hdrCols}
+        </tr></thead>
         <tbody>${rows}</tbody>
       </table>
     </div>`;
@@ -1214,7 +1281,7 @@ function renderTeam() {
   });
 
   html += `</tbody></table></div>
-    <div class="footer">Kritis Results v4 · Ομαδική Κατάταξη</div>
+    <div class="footer">Kritis Results v5 · Ομαδική Κατάταξη</div>
   </div>`;
   main.innerHTML = html;
 }
