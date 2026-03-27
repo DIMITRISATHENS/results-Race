@@ -1,1 +1,1440 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>🐟 Race Results v5</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
+
+:root {
+  --navy:    #080f1e;
+  --navy2:   #0d1b35;
+  --navy3:   #142850;
+  --blue:    #1565c0;
+  --cyan:    #00c8e0;
+  --cyan2:   #00e5ff;
+  --gold:    #ffd600;
+  --silver:  #b0bec5;
+  --bronze:  #ff8f00;
+  --green:   #00e676;
+  --red:     #ff1744;
+  --white:   #e8f4ff;
+  --muted:   #7a9bbf;
+  --card:    #0d1f3c;
+  --border:  rgba(0,200,224,0.12);
+  --border2: rgba(0,200,224,0.25);
+}
+
+*{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+body {
+  font-family:'IBM Plex Sans',sans-serif;
+  background: var(--navy);
+  color: var(--white);
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* ── HEADER ── */
+.header {
+  background: linear-gradient(160deg, var(--navy3) 0%, var(--navy2) 100%);
+  border-bottom: 1px solid var(--border2);
+  padding: 12px 16px 8px;
+  position: sticky; top:0; z-index:200;
+  box-shadow: 0 4px 30px rgba(0,0,0,0.5);
+}
+
+.header-row1 {
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+}
+
+.app-title {
+  font-family:'Bebas Neue',sans-serif;
+  font-size:1.6em; letter-spacing:3px;
+  color:var(--cyan); line-height:1;
+}
+
+.live-pill {
+  display:flex; align-items:center; gap:5px;
+  background:rgba(255,23,68,0.15);
+  border:1px solid rgba(255,23,68,0.4);
+  border-radius:20px; padding:4px 11px;
+  font-size:0.75em; font-weight:700; color:var(--red);
+  white-space:nowrap; flex-shrink:0;
+}
+.live-dot {
+  width:7px; height:7px; background:var(--red);
+  border-radius:50%; animation:blink 1.3s ease-in-out infinite;
+}
+@keyframes blink { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.3;transform:scale(.6)} }
+
+/* ── RACE SELECTOR ── */
+.race-selector {
+  margin-top:8px;
+  position:relative;
+}
+
+.race-select {
+  width:100%;
+  padding:10px 36px 10px 12px;
+  background: rgba(0,200,224,0.08);
+  border: 1px solid var(--border2);
+  border-radius:10px;
+  color:var(--white);
+  font-family:'IBM Plex Sans',sans-serif;
+  font-size:0.85em; font-weight:600;
+  appearance:none; cursor:pointer;
+  outline:none;
+}
+.race-select option { background:var(--navy2); color:var(--white); }
+.select-arrow {
+  position:absolute; right:12px; top:50%; transform:translateY(-50%);
+  color:var(--cyan); pointer-events:none; font-size:0.9em;
+}
+
+.race-meta {
+  display:flex; gap:8px; flex-wrap:wrap;
+  margin-top:6px;
+}
+.meta-chip {
+  font-size:0.7em; font-weight:600;
+  background:rgba(0,200,224,0.1);
+  border:1px solid var(--border);
+  border-radius:8px; padding:2px 8px;
+  color:var(--muted);
+}
+.meta-chip.gt {
+  background:rgba(255,214,0,0.1);
+  border-color:rgba(255,214,0,0.3);
+  color:var(--gold);
+}
+
+/* ── NAV TABS ── */
+.nav-tabs {
+  display:flex; gap:4px; padding:10px 14px 0;
+  overflow-x:auto; scrollbar-width:none;
+}
+.nav-tabs::-webkit-scrollbar{display:none;}
+.nav-tab {
+  flex-shrink:0; padding:7px 16px;
+  border:1px solid var(--border); border-bottom:none;
+  background:transparent; color:var(--muted);
+  font-family:'IBM Plex Sans',sans-serif;
+  font-size:0.82em; font-weight:700; letter-spacing:.5px;
+  border-radius:8px 8px 0 0; cursor:pointer; transition:all .2s;
+}
+.nav-tab.active {
+  background:var(--card); color:var(--cyan); border-color:var(--cyan);
+}
+
+/* ── MAIN ── */
+.main { padding:12px 14px 100px; }
+
+/* ── LOADING / EMPTY ── */
+.center-state {
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  min-height:50vh; gap:14px; text-align:center;
+}
+.state-icon { font-size:3em; }
+.state-title {
+  font-family:'Bebas Neue',sans-serif;
+  font-size:1.6em; letter-spacing:3px; color:var(--cyan);
+}
+.state-text { font-size:0.85em; color:var(--muted); line-height:1.6; max-width:260px; }
+
+.spinner {
+  width:36px; height:36px;
+  border:3px solid var(--border2);
+  border-top-color:var(--cyan);
+  border-radius:50%;
+  animation:spin .8s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── PROGRESS ── */
+.progress-card {
+  background:var(--card); border:1px solid var(--border);
+  border-radius:12px; padding:12px 14px;
+  margin-bottom:12px;
+  display:flex; align-items:center; gap:14px;
+}
+.progress-nums {
+  font-family:'Bebas Neue',sans-serif;
+  font-size:1.8em; color:var(--cyan); line-height:1; white-space:nowrap;
+}
+.progress-label { font-size:0.75em; color:var(--muted); margin-top:2px; }
+.pbar-wrap {
+  flex:1; height:6px;
+  background:rgba(255,255,255,0.07);
+  border-radius:99px; overflow:hidden;
+}
+.pbar-fill {
+  height:100%;
+  background:linear-gradient(90deg,var(--blue),var(--cyan));
+  border-radius:99px; transition:width .6s ease;
+}
+
+/* ── SECTOR CHIPS ── */
+.sector-strip {
+  display:flex; gap:6px; overflow-x:auto;
+  padding-bottom:10px; scrollbar-width:none; margin-bottom:10px;
+}
+.sector-strip::-webkit-scrollbar{display:none;}
+.sector-chip {
+  flex-shrink:0; padding:6px 14px;
+  background:var(--card); border:1px solid var(--border);
+  border-radius:20px; font-size:0.82em; font-weight:700;
+  color:var(--muted); cursor:pointer; transition:all .2s; white-space:nowrap;
+}
+.sector-chip.active {
+  background:var(--blue); border-color:var(--cyan);
+  color:white; box-shadow:0 2px 12px rgba(0,200,224,0.2);
+}
+
+/* ── RESULTS CARD ── */
+.results-card {
+  background:var(--card); border:1px solid var(--border);
+  border-radius:14px; overflow:hidden; margin-bottom:14px;
+}
+.results-card-hdr {
+  padding:10px 14px;
+  background:rgba(0,200,224,0.06);
+  border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between; gap:8px;
+}
+.results-card-title {
+  font-family:'Bebas Neue',sans-serif;
+  font-size:1.05em; letter-spacing:2px; color:var(--cyan);
+}
+
+/* ── TABLE ── */
+.rtable { width:100%; border-collapse:collapse; font-size:.875em; }
+.rtable thead th {
+  background:rgba(0,200,224,0.07);
+  color:var(--muted); font-size:.72em; font-weight:700;
+  letter-spacing:.8px; text-transform:uppercase;
+  padding:6px 8px; border-bottom:1px solid var(--border);
+}
+.rtable tbody tr {
+  border-bottom:1px solid rgba(255,255,255,0.04);
+  transition:background .15s;
+}
+.rtable tbody tr:hover { background:rgba(0,200,224,0.04); }
+.rtable tbody tr:last-child { border-bottom:none; }
+.rtable td { padding:6px 8px; vertical-align:middle; }
+
+/* Row highlights */
+.rtable tbody tr.r1 { background:rgba(255,214,0,0.05); }
+.rtable tbody tr.r2 { background:rgba(176,190,197,0.04); }
+.rtable tbody tr.r3 { background:rgba(255,143,0,0.04); }
+
+/* Rank cell */
+.rank-cell {
+  font-family:'Bebas Neue',sans-serif;
+  font-size:1.35em; text-align:center; width:38px; padding-right:4px;
+}
+.rk1 { color:var(--gold); }
+.rk2 { color:var(--silver); }
+.rk3 { color:var(--bronze); }
+.rko { color:var(--muted); }
+
+.athlete-name { font-weight:700; color:var(--white); font-size:.82em; line-height:1.3; }
+.athlete-club { font-size:.72em; color:var(--cyan); margin-top:1px; line-height:1.3; }
+.athlete-sponsor { font-size:.72em; color:var(--gold); margin-top:1px; line-height:1.3; }
+.ptype-badge {
+  display:inline-block; padding:0px 4px; border-radius:3px;
+  font-size:.68em; font-weight:700; margin-left:3px; vertical-align:middle;
+}
+.ptype-AO { background:rgba(255,214,0,0.18); color:var(--gold); }
+.ptype-A  { background:rgba(0,200,224,0.18); color:var(--cyan); }
+.ptype-O  { background:rgba(0,230,118,0.18); color:var(--green); }
+.overall-table-wrap { overflow-x:auto; }
+.overall-table-wrap .rtable { min-width:560px; }
+
+.score-val {
+  font-family:'IBM Plex Mono',monospace;
+  font-weight:600; font-size:.95em;
+  color:var(--cyan); text-align:right; white-space:nowrap;
+}
+.score-unit { font-size:.7em; color:var(--muted); font-weight:400; }
+.sub-score {
+  font-size:.72em; color:var(--muted);
+  font-family:'IBM Plex Mono',monospace;
+  text-align:right; white-space:nowrap;
+}
+
+/* Tied badge */
+.tied {
+  display:inline-block;
+  background:rgba(255,214,0,0.15);
+  border:1px solid rgba(255,214,0,0.3);
+  color:var(--gold); font-size:.6em; padding:1px 5px;
+  border-radius:4px; font-weight:700; margin-left:3px;
+  vertical-align:middle;
+}
+
+/* Incomplete badge */
+.inc-badge {
+  display:inline-flex; align-items:center; gap:3px;
+  background:rgba(255,214,0,0.1);
+  border:1px solid rgba(255,214,0,0.25);
+  color:var(--gold); font-size:.7em; padding:2px 8px;
+  border-radius:6px; font-weight:600;
+}
+.done-badge {
+  color:var(--green); font-size:.75em; font-weight:700;
+}
+
+/* ── NEW ROW ANIMATION ── */
+@keyframes flashNew {
+  0%   { background:rgba(0,230,118,0.25); }
+  100% { background:transparent; }
+}
+.row-new { animation:flashNew 1.5s ease-out forwards; }
+
+/* ── TOAST ── */
+.toast {
+  position:fixed; bottom:24px; left:50%;
+  transform:translateX(-50%) translateY(20px);
+  background:var(--navy2); border:1px solid var(--cyan);
+  color:var(--white); padding:10px 22px;
+  border-radius:99px; font-size:.88em; font-weight:600;
+  z-index:9999; opacity:0; transition:all .3s;
+  pointer-events:none; white-space:nowrap;
+  box-shadow:0 4px 20px rgba(0,0,0,0.4);
+}
+.toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+/* ── FOOTER ── */
+.footer { text-align:center; font-size:.7em; color:var(--muted); opacity:.4; margin-top:20px; }
+
+/* ── NO RACES ── */
+.no-races-btn {
+  padding:14px 28px;
+  background:linear-gradient(135deg,var(--blue),var(--cyan));
+  color:white; border:none; border-radius:12px;
+  font-family:'IBM Plex Sans',sans-serif;
+  font-size:1em; font-weight:700; cursor:pointer;
+  box-shadow:0 4px 20px rgba(0,200,224,0.25);
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-row1">
+    <div>
+      <div class="app-title">🐟 Race RESULTS</div>
+    </div>
+    <div class="live-pill" id="livePill" style="display:none;">
+      <div class="live-dot"></div>LIVE
+    </div>
+  </div>
+
+  <!-- Race Selector -->
+  <div class="race-selector" id="raceSelectorWrap" style="display:none;">
+    <select class="race-select" id="raceSelect" onchange="onRaceChange()">
+      <option value="">— Επιλογή Αγώνα —</option>
+    </select>
+    <div class="select-arrow">▾</div>
+  </div>
+  <div class="race-meta" id="raceMeta"></div>
+</div>
+
+<!-- NAV TABS -->
+<div class="nav-tabs" id="navTabs" style="display:none;">
+  <button class="nav-tab active" id="tab-live" onclick="showView('live')">📡 Live</button>
+  <button class="nav-tab" id="tab-overall" onclick="showView('overall')">🏆 Συνολική</button>
+  <button class="nav-tab" id="tab-individual" onclick="showView('individual')">🥇 Ατομική</button>
+  <button class="nav-tab" id="tab-team" onclick="showView('team')">🏅 Ομαδική</button>
+</div>
+
+<!-- MAIN -->
+<div class="main" id="mainContent">
+  <div class="center-state" id="loadingState">
+    <div class="spinner"></div>
+    <div class="state-text">Φόρτωση αγώνων...</div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ==========================================
+// CONFIG
+// ==========================================
+const SUPABASE_URL = 'https://lnknyxaozoyxxiqqaswi.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxua255eGFvem95eHhpcXFhc3dpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzOTMxMTYsImV4cCI6MjA4OTk2OTExNn0.MA86SoUGaPsaIxzEvLNnx9oCoewqTG0ivUEVTN9jAwQ';
+
+const HDR = {
+  'apikey':        SUPABASE_KEY,
+  'Authorization': `Bearer ${SUPABASE_KEY}`,
+  'Content-Type':  'application/json'
+};
+
+// ==========================================
+// STATE
+// ==========================================
+let races        = [];
+let currentRace  = null;
+let measurements = [];   // για τον τρέχοντα αγώνα
+let currentView  = 'live';
+let currentSector= null;
+let pollingTimer = null;
+
+// ==========================================
+// INIT
+// ==========================================
+async function init() {
+  await loadRaces();
+}
+
+// ==========================================
+// LOAD RACES
+// ==========================================
+async function loadRaces() {
+  showLoading();
+  try {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/races?is_active=eq.true&order=created_at.desc&limit=50`,
+      { headers: HDR }
+    );
+    if (!res.ok) throw new Error(await res.text());
+    races = await res.json();
+
+    if (races.length === 0) {
+      showNoRaces();
+      return;
+    }
+
+    populateDropdown();
+    // Auto-select πιο πρόσφατο
+    await selectRace(races[0].id);
+
+  } catch(e) {
+    showError(e.message);
+  }
+}
+
+function populateDropdown() {
+  const sel = document.getElementById('raceSelect');
+  sel.innerHTML = '<option value="">— Επιλογή Αγώνα —</option>';
+  races.forEach(r => {
+    const opt = document.createElement('option');
+    opt.value = r.id;
+    opt.textContent = `${r.race_title} · ${r.race_location||''} · ${r.race_date||''} · Αγ.${r.round_number}`;
+    sel.appendChild(opt);
+  });
+  document.getElementById('raceSelectorWrap').style.display = 'block';
+}
+
+async function onRaceChange() {
+  const id = document.getElementById('raceSelect').value;
+  if (!id) return;
+  await selectRace(id);
+}
+
+async function selectRace(id) {
+  currentRace = races.find(r => r.id === id) || races[0];
+  document.getElementById('raceSelect').value = currentRace.id;
+
+  // Meta chips
+  const gt = currentRace.game_type === 'float' ? '🎣 Float' : '🎯 Casting';
+  const rm = currentRace.rankMode || 'split';
+  const rmLabel = rm==='unified'?'Ενιαία':rm==='separate'?'Ξεχωριστή':'Διαχωρισμένη';
+  document.getElementById('raceMeta').innerHTML = `
+    <span class="meta-chip gt">${gt}</span>
+    <span class="meta-chip">📍 ${currentRace.race_location||'—'}</span>
+    <span class="meta-chip">📅 ${currentRace.race_date||'—'}</span>
+    <span class="meta-chip">Αγ. ${currentRace.round_number}</span>
+    <span class="meta-chip">📊 ${rmLabel}</span>
+  `;
+
+  // Set default sector
+  const sectors = currentRace.sectors || [];
+  if (sectors.length > 0) currentSector = sectors[0].name;
+
+  // Show UI
+  document.getElementById('navTabs').style.display = 'flex';
+  document.getElementById('livePill').style.display = 'flex';
+
+  // Load measurements
+  await loadMeasurements();
+
+  // Start polling
+  startPolling();
+
+  showView(currentView);
+}
+
+// ==========================================
+// LOAD MEASUREMENTS
+// ==========================================
+async function loadMeasurements() {
+  try {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/measurements?race_id=eq.${currentRace.id}&order=meas_num.asc`,
+      { headers: HDR }
+    );
+    if (!res.ok) throw new Error(await res.text());
+    measurements = await res.json();
+  } catch(e) {
+    console.warn('loadMeasurements error:', e);
+    measurements = [];
+  }
+}
+
+// ==========================================
+// POLLING — κάθε 10 δευτερόλεπτα
+// ==========================================
+function startPolling() {
+  if (pollingTimer) clearInterval(pollingTimer);
+  pollingTimer = setInterval(async () => {
+    if (!currentRace) return;
+    const prevCount = measurements.length;
+    const prevDone  = measurements.filter(m => m.completed).length;
+    await loadMeasurements();
+    const newDone = measurements.filter(m => m.completed).length;
+    if (newDone !== prevDone || measurements.length !== prevCount) {
+      renderCurrentView();
+      showToast('📡 Νέα καταμέτρηση!');
+    }
+  }, 10000);
+}
+
+// ==========================================
+// CALCULATIONS
+// ==========================================
+
+// ── Helpers participationType ──
+function getPType(a) {
+  if (a.participationType) return a.participationType;
+  return a.omadiko ? 'AO' : 'A';
+}
+function isAtomikos(a)  { const t=getPType(a); return t==='A'||t==='AO'; }
+function isOmadikos(a)  { const t=getPType(a); return t==='O'||t==='AO'; }
+function getRankMode()  { return currentRace?.rankMode || 'split'; }
+function isTwoListMode(){ return getRankMode()!=='unified' && hasOmadikoi(); }
+function hasOmadikoi()  {
+  return (currentRace?.athletes||[]).some(a => isOmadikos(a));
+}
+// split: μόνο AO στην ομαδική | separate: O+AO στην ομαδική
+function teamFilter(a) {
+  const rm = getRankMode();
+  if (rm==='separate') return isOmadikos(a);
+  if (rm==='split')    return getPType(a)==='AO';
+  return true; // unified
+}
+
+// ── Score υπολογισμός ──
+function athleteScore(a, isFloat) {
+  if (isFloat) {
+    return { total: a.totalWeight||0, maxFish: a.maxFish||0 };
+  } else {
+    const total = (a.totalCm||0) + (a.totalFish||0)*10;
+    return { total, maxFish: a.maxCatch||0 };
+  }
+}
+
+// ── Βαθμολογία από measurements για έναν τομέα ──
+// Επιστρέφει map: position → {totalCm, totalFish, maxCatch, totalWeight, maxFish}
+function buildSectorScores(sectorName) {
+  const isFloat = currentRace.game_type === 'float';
+  const sectorAthletes = (currentRace.athletes||[]).filter(a => a.sector===sectorName);
+  const sectorMeas = measurements.filter(m => m.sector===sectorName && m.completed);
+
+  const totals = {};
+  sectorAthletes.forEach(a => {
+    totals[a.position] = {
+      position:    a.position,
+      id:          a.id,
+      lastname:    a.lastname  || '',
+      firstname:   a.firstname || '',
+      club:        a.club      || '',
+      sponsor:     a.sponsor   || '',
+      participationType: getPType(a),
+      omadiko:     a.omadiko   || false,
+      totalCm: 0, totalFish: 0, maxCatch: 0,
+      totalWeight: 0, maxFish: 0
+    };
+  });
+
+  sectorMeas.forEach(m => {
+    (m.athletes||[]).forEach(a => {
+      if (!totals[a.position]) return;
+      if (isFloat) {
+        totals[a.position].totalWeight += (a.totalWeight||0);
+        if ((a.maxFish||0) > totals[a.position].maxFish)
+          totals[a.position].maxFish = a.maxFish||0;
+      } else {
+        totals[a.position].totalCm   += (a.totalCm||0);
+        totals[a.position].totalFish += (a.fish ? a.fish.length : 0);
+        const mx = a.fish?.length ? Math.max(...a.fish) : 0;
+        if (mx > totals[a.position].maxCatch) totals[a.position].maxCatch = mx;
+      }
+    });
+  });
+
+  // Συμπλήρωση sponsor από measurements (αν λείπει από races.athletes)
+  sectorMeas.forEach(m => {
+    (m.athletes||[]).forEach(a => {
+      if (totals[a.position] && !totals[a.position].sponsor && a.sponsor) {
+        totals[a.position].sponsor = a.sponsor;
+      }
+    });
+  });
+
+  // score = total για sorting
+  Object.values(totals).forEach(a => {
+    a.score = isFloat ? a.totalWeight : a.totalCm + a.totalFish*10;
+  });
+
+  return totals; // map position→athlete
+}
+
+// ── Virtual sector borrowing ──
+// Επιστρέφει τους δανεικούς αθλητές από τον προηγούμενο τομέα
+// με τα scores τους, για σύγκριση στον τεχνητό τομέα
+function getBorrowedAthletes(virtualSector) {
+  if (!virtualSector?.isVirtual || !virtualSector.virtualPositions) return [];
+  const sectors = currentRace.sectors || [];
+  const vIdx = sectors.findIndex(s => s.name===virtualSector.name);
+  if (vIdx <= 0) return [];
+
+  const prevSectorName = sectors[vIdx-1].name;
+  const prevScores = buildSectorScores(prevSectorName);
+  const prevAthletes = Object.values(prevScores)
+    .sort((a,b) => (b.position||0)-(a.position||0)); // από τελευταία θέση
+
+  const diff = virtualSector.virtualPositions;
+
+  // Ίδια λογική με SFM scenario 6:
+  // Προτ.1: Α αθλητές (δεν μπλέκουν την ομαδική)
+  // Προτ.2: AO/O συλλόγων που ΔΕΝ υπάρχουν ήδη στον virtual
+  // Fallback: υπόλοιποι
+
+  const virtualScores = buildSectorScores(virtualSector.name);
+  const clubsInVirtual = new Set(
+    Object.values(virtualScores)
+      .filter(a => isOmadikos(a))
+      .map(a => a.club)
+  );
+
+  const p1 = prevAthletes.filter(a => !isOmadikos(a));
+  const p2 = prevAthletes.filter(a => isOmadikos(a) && !clubsInVirtual.has(a.club));
+  const p3 = prevAthletes.filter(a => isOmadikos(a) &&  clubsInVirtual.has(a.club));
+
+  return [...p1, ...p2, ...p3]
+    .slice(0, diff)
+    .map(a => ({...a, _borrowed: true}));
+}
+
+// ── Κατάταξη τομέα (sectorRank + sectorRankTeam) ──
+// Επιστρέφει array αθλητών με rank, rankTeam, tied, tiedTeam
+function calcSectorRankings(sectorName) {
+  if (!currentRace) return [];
+  const isFloat   = currentRace.game_type === 'float';
+  const rankMode  = getRankMode();
+  const twoList   = isTwoListMode();
+  const sectors   = currentRace.sectors || [];
+  const sector    = sectors.find(s => s.name===sectorName);
+
+  // Βαθμολογίες πραγματικών αθλητών
+  const scores = buildSectorScores(sectorName);
+  let realAthletes = Object.values(scores);
+
+  // Δανεικοί για virtual τομέα
+  let borrowed = [];
+  if (sector?.isVirtual) {
+    borrowed = getBorrowedAthletes(sector);
+  }
+
+  // compareList = πραγματικοί + δανεικοί (για δίκαια σύγκριση)
+  const compareList = [...realAthletes, ...borrowed];
+
+  // ── ΑΤΟΜΙΚΗ κατάταξη τομέα ──
+  let listAtomiki = twoList ? compareList.filter(a => isAtomikos(a)) : compareList;
+  listAtomiki = listAtomiki.map(a => ({...a, ...athleteScore(a, isFloat)}));
+
+  listAtomiki.sort((x,y) => {
+    if (Math.abs(y.total-x.total)>0.001) return y.total-x.total;
+    return (y.maxFish||0)-(x.maxFish||0);
+  });
+
+  const rankedAtomiki = applyRankList(listAtomiki, isFloat);
+
+  // Γράψε sectorRank στους πραγματικούς
+  rankedAtomiki.forEach(e => {
+    if (!e._borrowed) {
+      const r = scores[e.position];
+      if (r) r.sectorRank = e.rank;
+    }
+  });
+
+  // ── ΟΜΑΔΙΚΗ κατάταξη τομέα ──
+  if (rankMode==='unified') {
+    // Ίδια με ατομική
+    Object.values(scores).forEach(a => { a.sectorRankTeam = a.sectorRank; });
+  } else if (twoList) {
+    let listTeam = compareList.filter(a => teamFilter(a));
+    listTeam = listTeam.map(a => ({...a, ...athleteScore(a, isFloat)}));
+    listTeam.sort((x,y) => {
+      if (Math.abs(y.total-x.total)>0.001) return y.total-x.total;
+      return (y.maxFish||0)-(x.maxFish||0);
+    });
+    const rankedTeam = applyRankList(listTeam, isFloat);
+    rankedTeam.forEach(e => {
+      if (!e._borrowed) {
+        const r = scores[e.position];
+        if (r) r.sectorRankTeam = e.rank;
+      } else {
+        // Δανεικός — αποθήκευσε rank στο borrowed object (για team calc)
+        const bobj = borrowed.find(b => b.position===e.position && b.id===e.id);
+        if (bobj) bobj._borrowedRankTeam = e.rank;
+      }
+    });
+    // Καθαρισμός: αθλητές που δεν είναι στην ομαδική παίρνουν null
+    Object.values(scores).forEach(a => {
+      if (!teamFilter(a)) a.sectorRankTeam = null;
+    });
+  } else {
+    Object.values(scores).forEach(a => { a.sectorRankTeam = a.sectorRank; });
+  }
+
+  // Επιστρέφει μόνο πραγματικούς (για render), με borrowed annotations
+  const result = Object.values(scores);
+  // Attach borrowed για χρήση στο team ranking
+  result._borrowed = borrowed;
+  return result;
+}
+
+// Rank helper — ίδια λογική floor/ceil με SFM
+function applyRankList(arr, isFloat) {
+  const out=[]; let i=0;
+  while (i<arr.length) {
+    let j=i+1;
+    while (j<arr.length &&
+      Math.abs(arr[j].total-arr[i].total)<0.001 &&
+      Math.abs((arr[j].maxFish||0)-(arr[i].maxFish||0))<0.001) j++;
+    const cnt=j-i;
+    const hasScore = arr[i].total>0;
+    let sum=0; for(let k=0;k<cnt;k++) sum+=i+1+k;
+    const rank = cnt===1 ? i+1 : hasScore ? Math.floor(sum/cnt) : Math.ceil(sum/cnt);
+    for(let k=i;k<j;k++) out.push({...arr[k], rank, tied:cnt>1});
+    i=j;
+  }
+  return out;
+}
+
+function isTied(a, b, isFloat) {
+  if (isFloat) return a.totalWeight===b.totalWeight && a.maxFish===b.maxFish;
+  return a.score===b.score && a.totalFish===b.totalFish && a.maxCatch===b.maxCatch;
+}
+
+function applyRanks(arr, isFloat) {
+  const out = []; let i = 0;
+  while (i < arr.length) {
+    let j = i+1;
+    while (j < arr.length && isTied(arr[i], arr[j], isFloat)) j++;
+    const pos = Array.from({length:j-i},(_,k)=>i+1+k);
+    for (let k=i; k<j; k++) {
+      const hasPoints = isFloat ? arr[k].totalWeight>0 : arr[k].totalFish>0;
+      let rank = pos.length===1 ? pos[0]
+        : hasPoints ? Math.floor(pos.reduce((s,p)=>s+p,0)/pos.length)
+                    : Math.ceil (pos.reduce((s,p)=>s+p,0)/pos.length);
+      out.push({...arr[k], rank, tied: pos.length>1});
+    }
+    i = j;
+  }
+  return out;
+}
+
+function getCompletedCount(sectorName) {
+  return measurements.filter(m => m.sector===sectorName && m.completed).length;
+}
+
+function getTotalMeasurements() {
+  return currentRace?.game_type === 'float' ? 1 : 10;
+}
+
+function getGlobalProgress() {
+  const sectors = currentRace?.sectors || [];
+  let done=0, total=0;
+  sectors.forEach(s => {
+    done  += getCompletedCount(s.name);
+    total += getTotalMeasurements();
+  });
+  return { done, total };
+}
+
+// ==========================================
+// ΟΜΑΔΙΚΗ ΚΑΤΑΤΑΞΗ
+// ==========================================
+function calcTeamRanking() {
+  if (!currentRace) return [];
+  const isFloat   = currentRace.game_type === 'float';
+  const twoList   = isTwoListMode();
+  const sectors   = currentRace.sectors || [];
+  const numSectors= sectors.length;
+  const dropWorst = parseInt(currentRace.dropWorst ?? 1);
+  const pegsPerSector = currentRace.pegsPerSector || 5;
+  const penaltyRank   = pegsPerSector + 1;
+
+  // Υπολόγισε όλους τους τομείς και μάζεψε scores + borrowed
+  const allBorrowed = []; // {club, sectorRankTeam, ...athlete}
+  const clubMap = {};    // club → [athletes with sectorRankTeam]
+
+  sectors.forEach(s => {
+    const ranked = calcSectorRankings(s.name);
+    // Πραγματικοί αθλητές
+    ranked.forEach(a => {
+      if (!teamFilter(a)) return;
+      const club = a.club || '(Χωρίς Σύλλογο)';
+      if (!clubMap[club]) clubMap[club] = [];
+      clubMap[club].push({
+        ...a,
+        sectorName: s.name,
+        _rankForTeam: twoList ? (a.sectorRankTeam ?? penaltyRank) : (a.sectorRank ?? penaltyRank),
+        _score:       isFloat ? (a.totalWeight||0) : (a.totalCm||0)+(a.totalFish||0)*10
+      });
+    });
+    // Δανεικοί από virtual τομέα
+    if (ranked._borrowed) {
+      ranked._borrowed.forEach(b => {
+        if (!teamFilter(b) || !b._borrowedRankTeam) return;
+        const club = b.club || '(Χωρίς Σύλλογο)';
+        if (!clubMap[club]) clubMap[club] = [];
+        clubMap[club].push({
+          ...b,
+          sectorName: s.name,
+          _isBorrowed: true,
+          _rankForTeam: b._borrowedRankTeam,
+          _score:       isFloat ? (b.totalWeight||0) : (b.totalCm||0)+(b.totalFish||0)*10
+        });
+      });
+    }
+  });
+
+  if (!Object.keys(clubMap).length) return [];
+
+  const teams = Object.entries(clubMap).map(([club, members]) => {
+    // Ταξινόμηση: χειρότερος rank πρώτος (για drop)
+    const sorted = [...members].sort((a,b) => {
+      if (b._rankForTeam!==a._rankForTeam) return b._rankForTeam-a._rankForTeam;
+      return a._score-b._score;
+    });
+
+    const canDrop = members.length >= numSectors;
+    const effDrop = canDrop ? (dropWorst||1) : 0;
+    const dropped  = effDrop>0 ? sorted.slice(0,effDrop)   : [];
+    const counting = effDrop>0 ? sorted.slice(effDrop)      : sorted;
+    const teamScore = counting.reduce((s,a) => s+a._rankForTeam, 0);
+    const teamTotal = counting.reduce((s,a) => s+a._score, 0);
+    return { club, members, counting, dropped, teamScore, teamTotal, canDrop };
+  });
+
+  teams.sort((a,b) => a.teamScore!==b.teamScore ? a.teamScore-b.teamScore : b.teamTotal-a.teamTotal);
+
+  let pos=1,i=0;
+  while (i<teams.length) {
+    let j=i;
+    while (j<teams.length &&
+      teams[j].teamScore===teams[i].teamScore &&
+      Math.abs(teams[j].teamTotal-teams[i].teamTotal)<0.001) j++;
+    const cnt=j-i;
+    let sum=0; for(let k=0;k<cnt;k++) sum+=pos+k;
+    const rank=cnt===1?pos:Math.floor(sum/cnt);
+    for(let k=i;k<j;k++) teams[k].teamRank=rank;
+    pos+=cnt; i=j;
+  }
+  return teams;
+}
+
+
+// ==========================================
+// ΑΤΟΜΙΚΗ ΚΑΤΑΤΑΞΗ ΑΓΩΝΑ
+// ==========================================
+function getParticipationType(athlete) {
+  return getPType(athlete);
+}
+
+function calcIndividualRankings() {
+  if (!currentRace) return [];
+  const isFloat  = currentRace.game_type === 'float';
+  const twoList  = isTwoListMode();
+  const sectors  = currentRace.sectors || [];
+
+  const allAthletes = [];
+
+  sectors.forEach(s => {
+    const rankings = calcSectorRankings(s.name);
+
+    rankings.forEach(r => {
+      const ptype = getPType(r);
+      // unified: όλοι | split/separate: μόνο A+AO
+      if (twoList && ptype==='O') return;
+
+      allAthletes.push({
+        ...r,
+        sector:           s.name,
+        points:           r.sectorRank,   // βαθμοί = θέση τομέα ατομικής
+        participationType: ptype
+      });
+    });
+  });
+
+  // Ταξινόμηση: βαθμοί ASC → score DESC → maxFish DESC
+  allAthletes.sort((a, b) => {
+    if (a.points !== b.points) return a.points - b.points;
+    const sA = isFloat ? (a.totalWeight||0) : (a.totalCm||0)+(a.totalFish||0)*10;
+    const sB = isFloat ? (b.totalWeight||0) : (b.totalCm||0)+(b.totalFish||0)*10;
+    if (sB !== sA) return sB - sA;
+    if (isFloat) return (b.maxFish||0)-(a.maxFish||0);
+    return (b.maxCatch||0)-(a.maxCatch||0);
+  });
+
+  return applyIndividualRanks(allAthletes, isFloat);
+}
+
+function isIndividualTied(a, b, isFloat) {
+  if (a.points !== b.points) return false;
+  if (a.score  !== b.score)  return false;
+  if (isFloat) return a.maxFish   === b.maxFish;
+  else         return a.totalFish === b.totalFish;
+}
+
+function applyIndividualRanks(arr, isFloat) {
+  const out = []; let i = 0;
+  while (i < arr.length) {
+    let j = i + 1;
+    while (j < arr.length && isIndividualTied(arr[i], arr[j], isFloat)) j++;
+    const pos = Array.from({length: j-i}, (_, k) => i+1+k);
+    for (let k = i; k < j; k++) {
+      const hasPoints = isFloat ? arr[k].totalWeight > 0 : arr[k].totalFish > 0;
+      let rank = pos.length === 1 ? pos[0]
+        : hasPoints ? Math.floor(pos.reduce((s,p) => s+p, 0) / pos.length)
+                    : Math.ceil (pos.reduce((s,p) => s+p, 0) / pos.length);
+      out.push({ ...arr[k], indRank: rank, indTied: pos.length > 1 });
+    }
+    i = j;
+  }
+  return out;
+}
+
+// ── RENDER ΑΤΟΜΙΚΗ ──
+function renderIndividual() {
+  const main    = document.getElementById('mainContent');
+  const isFloat = currentRace.game_type === 'float';
+  const rankings = calcIndividualRankings();
+
+  let rows = '';
+  if (rankings.length === 0) {
+    rows = `<tr><td colspan="7" style="text-align:center;padding:18px;color:var(--muted);font-size:.85em;">Δεν υπάρχουν ακόμα καταμετρήσεις</td></tr>`;
+  } else {
+    rows = rankings.map(a => {
+      const rkc      = a.indRank===1?'rk1':a.indRank===2?'rk2':a.indRank===3?'rk3':'rko';
+      const medal    = a.indRank===1?'🥇':a.indRank===2?'🥈':a.indRank===3?'🥉':a.indRank;
+      const rowc     = a.indRank<=3 ? `r${a.indRank}` : '';
+      const tied     = a.indTied ? '<span class="tied">=</span>' : '';
+      const score    = isFloat ? (a.totalWeight||0) : (a.totalCm||0)+(a.totalFish||0)*10;
+      const scoreDisp= isFloat
+        ? `<td class="score-val">${score}<span class="score-unit"> gr</span></td>`
+        : `<td class="score-val">${score}<span class="score-unit"> pt</span></td>`;
+      const maxDisp  = isFloat
+        ? `<td class="sub-score" style="text-align:right;">${(a.maxFish||0)>0?a.maxFish+' gr':'—'}</td>`
+        : `<td class="sub-score" style="text-align:right;">${(a.maxCatch||0)>0?a.maxCatch+' cm':'—'}</td>`;
+      const fishDisp = !isFloat
+        ? `<td class="sub-score" style="text-align:center;">${a.totalFish||0}</td>`
+        : '';
+
+      return `<tr class="${rowc}">
+        <td class="rank-cell ${rkc}" style="width:36px;">${medal}${tied}</td>
+        <td>${athleteCell(a)}</td>
+        <td class="sub-score" style="text-align:center;color:var(--muted);">${a.sector}${a.position||''}</td>
+        <td class="sub-score" style="text-align:center;color:var(--gold);font-weight:700;">${a.points}</td>
+        ${!isFloat ? fishDisp : ''}
+        ${scoreDisp}
+        ${maxDisp}
+      </tr>`;
+    }).join('');
+  }
+
+  const hdrCols = isFloat
+    ? `<th style="text-align:center;color:var(--muted);">Τομέας</th>
+       <th style="text-align:center;color:var(--gold);">Κατ.Τομ.</th>
+       <th style="text-align:right;">Βάρος</th>
+       <th style="text-align:right;color:var(--muted);">Max</th>`
+    : `<th style="text-align:center;color:var(--muted);">Τομέας</th>
+       <th style="text-align:center;color:var(--gold);">Κατ.Τομ.</th>
+       <th style="text-align:center;">🐟</th>
+       <th style="text-align:right;">Σύνολο</th>
+       <th style="text-align:right;color:var(--muted);">Max</th>`;
+
+  main.innerHTML = `
+    <div id="individualView">
+      <div class="results-card">
+        <div class="results-card-hdr">
+          <span class="results-card-title">ΑΤΟΜΙΚΗ ΚΑΤΑΤΑΞΗ</span>
+          <span class="meta-chip gt">${isFloat ? '🎣 Float' : '🎯 Casting'}</span>
+        </div>
+        <div class="overall-table-wrap">
+          <table class="rtable">
+            <thead><tr>
+              <th style="width:36px;">#</th>
+              <th>ΑΘΛΗΤΗΣ</th>
+              ${hdrCols}
+            </tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      </div>
+      <div class="footer">Kritis Results v6 · Ατομική Κατάταξη</div>
+    </div>`;
+}
+
+// ==========================================
+// VIEWS
+// ==========================================
+function showView(view) {
+  currentView = view;
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+view)?.classList.add('active');
+  renderCurrentView();
+}
+
+function renderCurrentView(flashSector) {
+  if (!currentRace) return;
+  if (currentView==='live')       renderLive(flashSector);
+  if (currentView==='overall')    renderOverall();
+  if (currentView==='individual') renderIndividual();
+  if (currentView==='team')       renderTeam();
+}
+
+// ── LIVE VIEW ──
+function renderLive(flashSector) {
+  const main   = document.getElementById('mainContent');
+  const isFloat= currentRace.game_type === 'float';
+  const sectors= currentRace.sectors || [];
+  let html = '<div id="liveView">';
+
+  // Progress (only for casting)
+  if (!isFloat) {
+    const prog = getGlobalProgress();
+    const pct  = prog.total>0 ? Math.round(prog.done/prog.total*100) : 0;
+    html += `
+      <div class="progress-card">
+        <div>
+          <div class="progress-nums">${prog.done}/${prog.total}</div>
+          <div class="progress-label">Καταμετρήσεις</div>
+        </div>
+        <div class="pbar-wrap">
+          <div class="pbar-fill" style="width:${pct}%"></div>
+        </div>
+      </div>`;
+  }
+
+  // Sector strip (if >1 sector)
+  if (sectors.length > 1) {
+    html += '<div class="sector-strip">';
+    sectors.forEach(s => {
+      const active = s.name===currentSector ? 'active' : '';
+      const done   = getCompletedCount(s.name);
+      const tot    = getTotalMeasurements();
+      html += `<div class="sector-chip ${active}" onclick="selectSector('${s.name}')">${s.name} <span style="opacity:.7;font-size:.82em;">${done}/${tot}</span></div>`;
+    });
+    html += '</div>';
+  }
+
+  // Rankings for current sector
+  const sName = currentSector || sectors[0]?.name;
+  if (sName) {
+    html += renderSectorTable(sName, flashSector === sName, 'live');
+  }
+
+  html += '<div class="footer">Race Results v3 · Live</div></div>';
+  main.innerHTML = html;
+}
+
+// ── OVERALL VIEW ──
+function renderOverall() {
+  const main    = document.getElementById('mainContent');
+  const sectors = currentRace.sectors || [];
+  let html = '<div id="overallView">';
+
+  sectors.forEach(s => {
+    html += renderSectorTable(s.name, false, 'overall');
+  });
+
+  html += '<div class="footer">Race Results v5</div></div>';
+  main.innerHTML = html;
+}
+
+// ── Live fish data per athlete ──
+// Επιστρέφει map: position → { allFish[], maxCatch }
+function buildLiveFish(sectorName) {
+  const sectorMeas = measurements.filter(m => m.sector===sectorName && m.completed);
+  const fishMap = {};
+
+  sectorMeas.forEach(m => {
+    (m.athletes||[]).forEach(a => {
+      if (!fishMap[a.position]) fishMap[a.position] = [];
+      if (a.fish && a.fish.length) {
+        fishMap[a.position].push(...a.fish);
+      }
+    });
+  });
+  return fishMap;
+}
+
+// ── Athlete cell HTML (όνομα + σύλλογος + χορηγός + badge) ──
+function athleteCell(a) {
+  const pt = getPType(a);
+  const sp = a.sponsor || '';
+  return `<div class="athlete-name">${a.lastname} ${a.firstname}<span class="ptype-badge ptype-${pt}">${pt}</span></div>
+          <div class="athlete-club">${a.club||''}</div>
+          ${sp ? `<div class="athlete-sponsor">${sp}</div>` : ''}`;
+}
+
+// ── SECTOR TABLE ──
+// mode: 'live' (με ψάρια) | 'overall' (full columns)
+function renderSectorTable(sName, flash=false, mode='live') {
+  const isFloat  = currentRace.game_type === 'float';
+  const twoList  = isTwoListMode();
+  const sectors  = currentRace.sectors || [];
+  const sector   = sectors.find(s => s.name===sName);
+  const isVirt   = sector?.isVirtual || false;
+  const rankings = calcSectorRankings(sName);
+  const done     = getCompletedCount(sName);
+  const tot      = getTotalMeasurements();
+  const full     = mode === 'overall';
+
+  const statusHtml = done < tot
+    ? `<span class="inc-badge">⏳ ${done}/${tot}</span>`
+    : `<span class="done-badge">✅ Ολοκλ.</span>`;
+  const virtBadge = isVirt
+    ? `<span class="meta-chip" style="background:rgba(255,165,0,0.15);border-color:rgba(255,165,0,0.4);color:orange;">⚡ Τεχνητός</span>`
+    : '';
+
+  // Fish chips για live mode
+  function fishChips(allFish) {
+    if (!allFish || !allFish.length) return '<span style="color:var(--muted);font-size:.8em;">—</span>';
+    const maxVal = Math.max(...allFish);
+    let html = '<div style="display:flex;flex-wrap:wrap;gap:3px;align-items:center;">';
+    allFish.forEach((f, i) => {
+      const isMax = f === maxVal;
+      const color = isMax ? 'var(--gold)' : 'var(--muted)';
+      const bg    = isMax ? 'rgba(255,214,0,0.15)' : 'rgba(255,255,255,0.05)';
+      const fw    = isMax ? '700' : '400';
+      html += `<span style="background:${bg};color:${color};border-radius:4px;padding:1px 5px;font-family:'IBM Plex Mono',monospace;font-size:.78em;font-weight:${fw};white-space:nowrap;">${f}</span>`;
+      if ((i+1) % 10 === 0 && i < allFish.length-1) {
+        html += '<span style="width:100%;height:0;"></span>';
+      }
+    });
+    html += '</div>';
+    return html;
+  }
+
+  let rows = '';
+  // Live: ΘΕΣΗ | ΑΘΛΗΤΗΣ | ΨΑΡΙΑ | 🐟 | Σ(cm) | Π×10 | ΣΥΝΟΛΟ | ΚΑΤ.ΑΤ. | [ΚΑΤ.ΟΜ.]
+  // Overall: ΘΕΣΗ | ΑΘΛΗΤΗΣ | 🐟 | Σ(cm) | Π×10 | ΣΥΝΟΛΟ | ΚΑΤ.ΑΤ. | [ΚΑΤ.ΟΜ.]
+  const emptyColspan = isFloat
+    ? (full ? (twoList?6:5) : (twoList?5:4))
+    : (full ? (twoList?8:7) : (twoList?9:8));
+
+  // Live fish map (μόνο για live mode casting)
+  const liveFish = (!full && !isFloat) ? buildLiveFish(sName) : {};
+
+  if (rankings.length === 0) {
+    rows = `<tr><td colspan="${emptyColspan}" style="text-align:center;padding:18px;color:var(--muted);font-size:.85em;">Δεν υπάρχουν ακόμα καταμετρήσεις</td></tr>`;
+  } else if (isFloat) {
+    rows = rankings.map((a,i) => {
+      const rank  = a.sectorRank ?? (i+1);
+      const rkc   = rank===1?'rk1':rank===2?'rk2':rank===3?'rk3':'rko';
+      const medal = rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':rank;
+      const rowc  = rank<=3?`r${rank}`:'';
+      const newc  = flash && i===0 ? 'row-new' : '';
+      const tied  = a.tied ? '<span class="tied">=</span>' : '';
+
+      if (!full) {
+        const rankTeamF = twoList ? (a.sectorRankTeam!=null ? `<span style="color:var(--green);font-weight:700;">${a.sectorRankTeam}</span>` : '—') : '';
+        return `<tr class="${rowc} ${newc}">
+          <td style="font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:.85em;color:var(--muted);width:36px;">${a.position}</td>
+          <td>${athleteCell(a)}</td>
+          <td class="score-val">${a.totalWeight}<span class="score-unit"> gr</span></td>
+          <td class="sub-score">${a.maxFish>0?a.maxFish+' gr':'—'}</td>
+          <td class="sub-score" style="text-align:center;color:var(--cyan);font-weight:700;">${rank}</td>
+          ${twoList ? `<td class="sub-score" style="text-align:center;color:var(--green);font-weight:700;">${rankTeamF}</td>` : ''}
+        </tr>`;
+      }
+      const rankTeam = twoList ? (a.sectorRankTeam!=null ? `<span style="color:var(--green);font-weight:700;">${a.sectorRankTeam}</span>` : '—') : '';
+      return `<tr class="${rowc} ${newc}">
+        <td style="font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:.85em;color:var(--muted);width:38px;">${a.position}</td>
+        <td>${athleteCell(a)}</td>
+        <td class="sub-score" style="text-align:center;">${a.maxFish>0?a.maxFish+' gr':'—'}</td>
+        <td class="score-val">${a.totalWeight}<span class="score-unit"> gr</span></td>
+        <td class="sub-score" style="text-align:center;color:var(--cyan);font-weight:700;">${rank}</td>
+        ${twoList ? `<td class="sub-score" style="text-align:center;color:var(--green);font-weight:700;">${rankTeam}</td>` : ''}
+      </tr>`;
+    }).join('');
+  } else {
+    rows = rankings.map((a,i) => {
+      const rank  = a.sectorRank ?? (i+1);
+      const rkc   = rank===1?'rk1':rank===2?'rk2':rank===3?'rk3':'rko';
+      const medal = rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':rank;
+      const rowc  = rank<=3?`r${rank}`:'';
+      const newc  = flash && i===0 ? 'row-new' : '';
+      const fish  = a.totalFish || 0;
+      const cm    = a.totalCm   || 0;
+      const px10  = fish * 10;
+      const total = cm + px10;
+
+      if (!full) {
+        const allFish = liveFish[a.position] || [];
+        const rankTeam = twoList
+          ? (a.sectorRankTeam!=null ? `<span style="color:var(--green);font-weight:700;">${a.sectorRankTeam}</span>` : '<span style="color:var(--muted);">—</span>')
+          : '';
+        return `<tr class="${rowc} ${newc}">
+          <td style="font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:.85em;color:var(--muted);width:36px;vertical-align:top;padding-top:6px;">${a.position}</td>
+          <td style="vertical-align:top;">${athleteCell(a)}</td>
+          <td style="vertical-align:top;padding:4px 6px;">${fishChips(allFish)}</td>
+          <td class="sub-score" style="text-align:center;vertical-align:top;padding-top:6px;">${fish}</td>
+          <td class="sub-score" style="text-align:right;vertical-align:top;padding-top:6px;">${cm}</td>
+          <td class="sub-score" style="text-align:right;color:var(--muted);vertical-align:top;padding-top:6px;">${px10}</td>
+          <td class="score-val" style="vertical-align:top;padding-top:6px;">${total}<span class="score-unit"> pt</span></td>
+          <td class="sub-score" style="text-align:center;color:var(--cyan);font-weight:700;vertical-align:top;padding-top:6px;">${rank}</td>
+          ${twoList ? `<td class="sub-score" style="text-align:center;vertical-align:top;padding-top:6px;">${rankTeam}</td>` : ''}
+        </tr>`;
+      }
+      const rankTeam = twoList
+        ? (a.sectorRankTeam!=null ? `<span style="color:var(--green);font-weight:700;">${a.sectorRankTeam}</span>` : '<span style="color:var(--muted);">—</span>')
+        : '';
+      return `<tr class="${rowc} ${newc}">
+        <td style="font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:.85em;color:var(--muted);width:38px;">${a.position}</td>
+        <td>${athleteCell(a)}</td>
+        <td class="sub-score" style="text-align:center;">${fish}</td>
+        <td class="sub-score" style="text-align:right;">${cm}</td>
+        <td class="sub-score" style="text-align:right;color:var(--muted);">${px10}</td>
+        <td class="score-val" style="font-weight:700;">${total}<span class="score-unit"> pt</span></td>
+        <td class="sub-score" style="text-align:center;color:var(--cyan);font-weight:700;">${rank}</td>
+        ${twoList ? `<td class="sub-score" style="text-align:center;color:var(--green);font-weight:700;">${rankTeam}</td>` : ''}
+      </tr>`;
+    }).join('');
+  }
+
+  // Headers
+  let hdrCols;
+  if (!full) {
+    // Live: ψάρια + ίδιες κολώνες με overall
+    hdrCols = isFloat
+      ? `<th style="text-align:right;">Βάρος</th><th style="text-align:right;">Max</th><th style="width:44px;text-align:center;color:var(--cyan);">Κατ.Ατ.</th>${twoList?`<th style="text-align:center;color:var(--green);">Κατ.Ομ.</th>`:''}`
+      : `<th>Ψάρια (cm)</th>
+         <th style="text-align:center;width:36px;">🐟</th>
+         <th style="text-align:right;">Σ(cm)</th>
+         <th style="text-align:right;color:var(--muted);">Π×10</th>
+         <th style="text-align:right;">Σύνολο</th>
+         <th style="text-align:center;color:var(--cyan);">Κατ.Ατ.</th>
+         ${twoList?`<th style="text-align:center;color:var(--green);">Κατ.Ομ.</th>`:''}`;
+  } else if (isFloat) {
+    hdrCols = `
+      <th style="text-align:center;">Max</th>
+      <th style="text-align:right;">Βάρος</th>
+      <th style="text-align:center;color:var(--cyan);">Κατ.Ατ.</th>
+      ${twoList ? `<th style="text-align:center;color:var(--green);">Κατ.Ομ.</th>` : ''}`;
+  } else {
+    hdrCols = `
+      <th style="text-align:center;">🐟</th>
+      <th style="text-align:right;">Σ(cm)</th>
+      <th style="text-align:right;color:var(--muted);">Π×10</th>
+      <th style="text-align:right;">Σύνολο</th>
+      <th style="text-align:center;color:var(--cyan);">Κατ.Ατ.</th>
+      ${twoList ? `<th style="text-align:center;color:var(--green);">Κατ.Ομ.</th>` : ''}`;
+  }
+
+  const tableHtml = `<table class="rtable">
+      <thead><tr>
+        <th style="width:36px;">ΘΕΣΗ</th>
+        <th>ΑΘΛΗΤΗΣ</th>
+        ${hdrCols}
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+
+  return `
+    <div class="results-card">
+      <div class="results-card-hdr">
+        <span class="results-card-title">ΤΟΜΕΑΣ ${sName}</span>
+        <div style="display:flex;gap:6px;align-items:center;">${virtBadge}${statusHtml}</div>
+      </div>
+      <div class="overall-table-wrap">${tableHtml}</div>
+    </div>`;
+}
+
+// ── TEAM VIEW ──
+function renderTeam() {
+  const main    = document.getElementById('mainContent');
+  const isFloat = currentRace.game_type === 'float';
+  const twoList = isTwoListMode();
+
+  if (!twoList && getRankMode()==='unified') {
+    main.innerHTML = `<div class="center-state">
+      <div class="state-icon">🏅</div>
+      <div class="state-title">Ενιαία Κατάταξη</div>
+      <div class="state-text">Ο αγώνας χρησιμοποιεί ενιαία κατάταξη — δεν υπάρχει ξεχωριστή ομαδική.</div>
+    </div>`;
+    return;
+  }
+
+  const teams = calcTeamRanking();
+
+  if (!teams.length) {
+    main.innerHTML = `<div class="center-state">
+      <div class="state-icon">🏅</div>
+      <div class="state-title">Δεν υπάρχουν ομαδικοί</div>
+      <div class="state-text">Δεν υπάρχουν αθλητές τύπου AO ή O στον αγώνα.</div>
+    </div>`;
+    return;
+  }
+
+  const medals  = {1:'🥇',2:'🥈',3:'🥉'};
+  const rmLabel = getRankMode()==='split' ? 'μόνο AO' : 'O + AO';
+  let html = `<div id="teamView">
+    <div class="results-card" style="margin-bottom:14px;">
+      <div class="results-card-hdr">
+        <span class="results-card-title">ΟΜΑΔΙΚΗ ΚΑΤΑΤΑΞΗ</span>
+        <span class="meta-chip gt">👥 ${rmLabel}</span>
+      </div>
+      <table class="rtable">
+        <thead><tr>
+          <th style="width:38px;">ΘΕΣΗ ΚΑΤΑΤΑΞΗΣ</th>
+          <th>Σύλλογος</th>
+          <th style="text-align:center;width:55px;">Αθλητές</th>
+          <th style="text-align:center;color:var(--gold);">Σκορ</th>
+          <th style="text-align:right;">${isFloat?'Βάρος':'Σύνολο'}</th>
+        </tr></thead>
+        <tbody>`;
+
+  teams.forEach(t => {
+    const medal = medals[t.teamRank]||t.teamRank;
+    const rowc  = t.teamRank<=3?`r${t.teamRank}`:'';
+    const rkc   = t.teamRank===1?'rk1':t.teamRank===2?'rk2':t.teamRank===3?'rk3':'rko';
+    const dropNote = t.canDrop && t.dropped.length
+      ? `<span style="font-size:.68em;color:var(--muted);margin-left:4px;">-${t.dropped.length} χειρ.</span>`
+      : '';
+    const totalDisp = isFloat
+      ? `${t.teamTotal} gr`
+      : t.teamTotal.toFixed(1);
+    html += `<tr class="${rowc}" style="cursor:pointer;" onclick="toggleTeamDetail('club_${t.teamRank}')">
+      <td class="rank-cell ${rkc}">${medal}</td>
+      <td><div class="athlete-name">${t.club}${dropNote}</div>
+          <div class="athlete-club">${t.counting.length}/${t.members.length} αθλητές μετρούν</div></td>
+      <td style="text-align:center;">${t.members.length}</td>
+      <td class="sub-score" style="text-align:center;color:var(--gold);">${t.teamScore}</td>
+      <td class="score-val">${totalDisp}</td>
+    </tr>
+    <tr id="club_${t.teamRank}" style="display:none;">
+      <td colspan="5" style="padding:0;">
+        <div style="background:rgba(0,200,224,0.04);border-top:1px solid var(--border);padding:8px 12px;">
+          <table class="rtable" style="font-size:.8em;">
+            <thead><tr>
+              <th>Αθλητής</th>
+              <th style="text-align:center;width:50px;">Τύπος</th>
+              <th style="text-align:center;width:55px;">Τομέας</th>
+              <th style="text-align:center;width:60px;">Κατ.Τομ.</th>
+              <th style="text-align:right;">${isFloat?'Βάρος':'Σκορ'}</th>
+              <th style="text-align:center;width:70px;">Μετράει</th>
+            </tr></thead>
+            <tbody>`;
+
+    [...t.counting, ...t.dropped].forEach(a => {
+      const isDropped = t.dropped.includes(a);
+      const ptColors  = {AO:'var(--gold)',A:'var(--cyan)',O:'var(--green)'};
+      const pt        = getPType(a);
+      const scoreDisp = isFloat ? `${a.totalWeight||0} gr` : ((a.totalCm||0)+(a.totalFish||0)*10).toFixed(1);
+      const rankDisp  = a._rankForTeam || '—';
+      const borrowedBadge = a._isBorrowed ? `<span style="background:rgba(255,165,0,0.2);color:orange;font-size:.65em;padding:1px 4px;border-radius:3px;margin-left:4px;">★</span>` : '';
+      html += `<tr style="${isDropped?'opacity:0.45;':''}">
+        <td>${a.lastname} ${a.firstname}${borrowedBadge}</td>
+        <td style="text-align:center;"><span style="background:${ptColors[pt]||'var(--muted)'};color:var(--navy);padding:1px 5px;border-radius:3px;font-size:.7em;font-weight:700;">${pt}</span></td>
+        <td style="text-align:center;font-weight:700;">${a.sectorName||'—'}</td>
+        <td style="text-align:center;color:var(--cyan);font-weight:700;">${rankDisp}</td>
+        <td style="text-align:right;color:var(--cyan);">${scoreDisp}</td>
+        <td style="text-align:center;">${isDropped?'❌':'✅'}</td>
+      </tr>`;
+    });
+
+    html += `</tbody></table></div></td></tr>`;
+  });
+
+  html += `</tbody></table></div>
+    <div class="footer">Race Results v5 · Ομαδική Κατάταξη</div>
+  </div>`;
+  main.innerHTML = html;
+}
+
+function toggleTeamDetail(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.style.display = el.style.display==='none' ? 'table-row' : 'none';
+}
+
+function selectSector(name) {
+  currentSector = name;
+  renderLive();
+  document.querySelectorAll('.sector-chip').forEach(c => {
+    c.classList.toggle('active', c.textContent.trim().startsWith(name));
+  });
+}
+
+// ==========================================
+// UI STATES
+// ==========================================
+function showLoading() {
+  document.getElementById('mainContent').innerHTML = `
+    <div class="center-state">
+      <div class="spinner"></div>
+      <div class="state-text">Φόρτωση αγώνων...</div>
+    </div>`;
+}
+
+function showNoRaces() {
+  document.getElementById('mainContent').innerHTML = `
+    <div class="center-state">
+      <div class="state-icon">🎣</div>
+      <div class="state-title">Κανένας Αγώνας</div>
+      <div class="state-text">Δεν υπάρχουν ακόμα αγώνες στο σύστημα.<br>Ενεργοποίησε το Live Publishing στο MeasurementApp.</div>
+      <button class="no-races-btn" onclick="loadRaces()">🔄 Ανανέωση</button>
+    </div>`;
+}
+
+function showError(msg) {
+  document.getElementById('mainContent').innerHTML = `
+    <div class="center-state">
+      <div class="state-icon">⚠️</div>
+      <div class="state-title">Σφάλμα</div>
+      <div class="state-text">${msg}</div>
+      <button class="no-races-btn" onclick="loadRaces()">🔄 Δοκίμασε ξανά</button>
+    </div>`;
+}
+
+// ==========================================
+// TOAST
+// ==========================================
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2500);
+}
+
+// ==========================================
+// START
+// ==========================================
+init();
+</script>
+</body>
+</html>
 
