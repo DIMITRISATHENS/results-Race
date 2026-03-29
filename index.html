@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>🐟 SFM Live v8</title>
+<title>🐟 SFM Live v9</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
 
@@ -310,10 +310,11 @@ body {
 
 <!-- NAV TABS -->
 <div class="nav-tabs" id="navTabs" style="display:none;">
-  <button class="nav-tab active" id="tab-draw"       onclick="showView('draw')">🎯 Κλήρωση</button>
-  <button class="nav-tab"        id="tab-live"       onclick="showView('live')">📡 Live</button>
-  <button class="nav-tab"        id="tab-individual" onclick="showView('individual')">🥇 Ατομική</button>
-  <button class="nav-tab"        id="tab-team"       onclick="showView('team')">🏅 Ομαδική</button>
+  <button class="nav-tab active" id="tab-draw"         onclick="showView('draw')">🎯 Κλήρωση</button>
+  <button class="nav-tab"        id="tab-live"         onclick="showView('live')">📡 Live</button>
+  <button class="nav-tab"        id="tab-individual"   onclick="showView('individual')">🥇 Ατομική</button>
+  <button class="nav-tab"        id="tab-team"         onclick="showView('team')">🏅 Ομαδική</button>
+  <button class="nav-tab"        id="tab-championship" onclick="showView('championship')" style="background:linear-gradient(135deg,rgba(255,214,0,.15),rgba(255,143,0,.1));border-color:rgba(255,214,0,.4);color:var(--gold);">🏆 Πρωτάθλημα</button>
 </div>
 
 <!-- MAIN -->
@@ -348,6 +349,10 @@ let measurements = [];
 let currentView  = 'draw';
 let currentSector= null;
 let pollingTimer = null;
+// Championship state
+let champRaces        = [];   // όλοι οι αγώνες του πρωταθλήματος
+let champMeasurements = {};   // { race_id: [measurements] }
+let champLoaded       = false;
 
 // ==========================================
 // INIT
@@ -459,10 +464,11 @@ function showView(view) {
 
 function renderCurrentView(flashSector) {
   if (!currentRace) return;
-  if (currentView === 'draw')       renderDraw();
-  if (currentView === 'live')       renderLive(flashSector);
-  if (currentView === 'individual') renderIndividual();
-  if (currentView === 'team')       renderTeam();
+  if (currentView === 'draw')         renderDraw();
+  if (currentView === 'live')         renderLive(flashSector);
+  if (currentView === 'individual')   renderIndividual();
+  if (currentView === 'team')         renderTeam();
+  if (currentView === 'championship') renderChampionship();
 }
 
 // ==========================================
@@ -1079,6 +1085,324 @@ function showToast(msg) {
 // START
 // ==========================================
 init();
+
+// ==========================================
+// 🏆 ΠΡΩΤΑΘΛΗΜΑ — Championship View
+// ==========================================
+
+async function loadChampionshipData() {
+  const champId = currentRace?.championship_id;
+  if (!champId) return false;
+
+  const main = document.getElementById('mainContent');
+  main.innerHTML = `<div class="center-state"><div class="spinner"></div><div class="state-text">Φόρτωση πρωταθλήματος...</div></div>`;
+
+  try {
+    // 1) Φέρε όλους τους αγώνες του πρωταθλήματος
+    const rRes = await fetch(
+      `${SUPABASE_URL}/rest/v1/races?championship_id=eq.${encodeURIComponent(champId)}&order=round_number.asc`,
+      { headers: HDR }
+    );
+    if (!rRes.ok) throw new Error(await rRes.text());
+    champRaces = await rRes.json();
+    if (!champRaces.length) { champLoaded = false; return false; }
+
+    // 2) Φέρε μετρήσεις για όλους τους αγώνες
+    const ids = champRaces.map(r => r.id).join(',');
+    const mRes = await fetch(
+      `${SUPABASE_URL}/rest/v1/measurements?race_id=in.(${ids})&order=meas_num.asc`,
+      { headers: HDR }
+    );
+    if (!mRes.ok) throw new Error(await mRes.text());
+    const allMeas = await mRes.json();
+
+    champMeasurements = {};
+    champRaces.forEach(r => { champMeasurements[r.id] = []; });
+    allMeas.forEach(m => {
+      if (champMeasurements[m.race_id]) champMeasurements[m.race_id].push(m);
+    });
+
+    champLoaded = true;
+    return true;
+  } catch(e) {
+    console.error('Championship load error:', e);
+    champLoaded = false;
+    return false;
+  }
+}
+
+// Υπολογισμός ατομικής κατάταξης αγώνα από raw data (χωρίς global state)
+function calcRaceIndivRanks(race, meas) {
+  const isFloat = race.game_type === 'float';
+  const sectors = race.sectors || [];
+  const pegsPerSector = race.pegs_per_sector || race.pegsPerSector || 5;
+  const penaltyRank   = pegsPerSector + 1;
+  const twoList = (race.rank_mode || race.rankMode || 'split') !== 'unified' &&
+                  (race.athletes||[]).some(a => { const t=a.participationType||'A'; return t==='O'||t==='AO'; });
+
+  // Χτίσε scores ανά αθλητή ανά τομέα
+  const allRanked = [];
+  sectors.forEach(s => {
+    const pegs = s.pegs || [];
+    const measMap = {};
+    meas.filter(m => m.sector === s.name).forEach(m => {
+      if (!measMap[m.athlete_id]) measMap[m.athlete_id] = [];
+      measMap[m.athlete_id].push(m);
+    });
+
+    const athletes = (race.athletes||[]).filter(a => a.sector === s.name);
+    const scores = {};
+    athletes.forEach(a => {
+      const ms = measMap[a.id] || [];
+      const totalWeight = ms.reduce((s,m)=>s+(m.weight||0),0);
+      const totalFish   = ms.reduce((s,m)=>s+(m.fish_count||0),0);
+      const totalCm     = ms.reduce((s,m)=>s+(m.length_cm||0),0);
+      const maxFish     = ms.length ? Math.max(...ms.map(m=>m.weight||0)) : 0;
+      const maxCatch    = ms.length ? Math.max(...ms.map(m=>m.length_cm||0)) : 0;
+      scores[a.id] = { ...a, totalWeight, totalFish, totalCm, maxFish, maxCatch };
+    });
+
+    // Ατομική κατάταξη τομέα
+    const ptype = a => a.participationType || 'A';
+    const isAtom = a => { const t=ptype(a); return t==='A'||t==='AO'; };
+    const arr = Object.values(scores).filter(a => isAtom(a));
+    arr.sort((a,b) => {
+      const sA = isFloat?(a.totalWeight||0):(a.totalCm||0)+(a.totalFish||0)*10;
+      const sB = isFloat?(b.totalWeight||0):(b.totalCm||0)+(b.totalFish||0)*10;
+      if (sB!==sA) return sB-sA;
+      return isFloat?(b.maxFish||0)-(a.maxFish||0):(b.maxCatch||0)-(a.maxCatch||0);
+    });
+
+    let pos=1;
+    for (let i=0; i<arr.length;) {
+      let j=i+1;
+      const a=arr[i];
+      const sA=isFloat?(a.totalWeight||0):(a.totalCm||0)+(a.totalFish||0)*10;
+      while (j<arr.length) {
+        const b=arr[j];
+        const sB=isFloat?(b.totalWeight||0):(b.totalCm||0)+(b.totalFish||0)*10;
+        if (sA!==sB) break; j++;
+      }
+      const groupPositions=Array.from({length:j-i},(_,k)=>pos+k);
+      for (let k=i;k<j;k++){
+        const hasPoints=isFloat?arr[k].totalWeight>0:arr[k].totalFish>0;
+        const rank=groupPositions.length===1?groupPositions[0]:hasPoints
+          ?Math.floor(groupPositions.reduce((s,p)=>s+p,0)/groupPositions.length)
+          :Math.ceil(groupPositions.reduce((s,p)=>s+p,0)/groupPositions.length);
+        allRanked.push({ ...arr[k], sectorRank: rank, sectorName: s.name });
+      }
+      pos+=j-i; i=j;
+    }
+  });
+
+  // Συνολική ατομική κατάταξη αγώνα
+  allRanked.sort((a,b) => {
+    if (a.sectorRank!==b.sectorRank) return a.sectorRank-b.sectorRank;
+    const sA=isFloat?(a.totalWeight||0):(a.totalCm||0)+(a.totalFish||0)*10;
+    const sB=isFloat?(b.totalWeight||0):(b.totalCm||0)+(b.totalFish||0)*10;
+    return sB-sA;
+  });
+
+  const out=[]; let i=0;
+  while(i<allRanked.length){
+    let j=i+1;
+    while(j<allRanked.length&&allRanked[j].sectorRank===allRanked[i].sectorRank) j++;
+    const groupPos=Array.from({length:j-i},(_,k)=>i+1+k);
+    const rank=groupPos.length===1?groupPos[0]:Math.round(groupPos.reduce((s,p)=>s+p,0)/groupPos.length);
+    for(let k=i;k<j;k++) out.push({...allRanked[k], finalRank: rank});
+    i=j;
+  }
+  return out; // [ { id, lastname, firstname, club, finalRank, sectorRank, totalWeight, ... } ]
+}
+
+// Υπολογισμός ατομικής κατάταξης πρωταθλήματος (αθροιστική)
+function calcChampionshipIndiv() {
+  // Κλειδί: athlete id → { info, ranks: [finalRank per race] }
+  const map = {};
+
+  champRaces.forEach(race => {
+    const meas = champMeasurements[race.id] || [];
+    const ranked = calcRaceIndivRanks(race, meas);
+    const totalAthletes = (race.athletes||[]).filter(a=>{const t=a.participationType||'A';return t==='A'||t==='AO';}).length;
+    const penalty = totalAthletes + 1; // αν δεν συμμετείχε
+
+    ranked.forEach(a => {
+      const key = `${a.lastname}_${a.firstname}_${a.club||''}`.toLowerCase();
+      if (!map[key]) map[key] = { lastname:a.lastname, firstname:a.firstname, club:a.club||'', id:a.id, ranks:[], totalScore:0 };
+      map[key].ranks.push({ round: race.round_number, rank: a.finalRank });
+      map[key].totalScore += a.finalRank;
+    });
+  });
+
+  // Αθλητές που δεν είχαν αποτελέσματα σε κάποιο αγώνα παίρνουν penalty
+  // (αυτό ήδη αντιμετωπίζεται γιατί δεν εμφανίζονται στο ranked)
+
+  const arr = Object.values(map);
+  arr.sort((a,b) => a.totalScore - b.totalScore);
+
+  // Κατάταξη με ισοβαθμίες
+  const out=[]; let i=0;
+  while(i<arr.length){
+    let j=i+1;
+    while(j<arr.length&&arr[j].totalScore===arr[i].totalScore) j++;
+    const rank=i+1;
+    for(let k=i;k<j;k++) out.push({...arr[k], champRank:rank, tied:j-i>1});
+    i=j;
+  }
+  return out;
+}
+
+// Υπολογισμός ομαδικής κατάταξης πρωταθλήματος
+function calcChampionshipTeam() {
+  const indiv = calcChampionshipIndiv();
+  const clubMap = {};
+
+  indiv.forEach(a => {
+    const club = a.club || '(Χωρίς Σύλλογο)';
+    if (!clubMap[club]) clubMap[club] = [];
+    clubMap[club].push(a);
+  });
+
+  // Ομαδική: αθροίζουμε τα totalScore των 3 καλύτερων ανά σύλλογο
+  const TEAM_COUNT = 3;
+  const teams = Object.entries(clubMap).map(([club, members]) => {
+    const sorted = [...members].sort((a,b) => a.totalScore - b.totalScore);
+    const counting = sorted.slice(0, TEAM_COUNT);
+    const teamScore = counting.reduce((s,a)=>s+a.totalScore, 0);
+    return { club, members: sorted, counting, teamScore };
+  }).filter(t => t.counting.length >= 1);
+
+  teams.sort((a,b) => a.teamScore - b.teamScore);
+
+  let i=0;
+  while(i<teams.length){
+    let j=i+1;
+    while(j<teams.length&&teams[j].teamScore===teams[i].teamScore) j++;
+    const rank=i+1;
+    for(let k=i;k<j;k++) teams[k].teamRank=rank;
+    i=j;
+  }
+  return teams;
+}
+
+async function renderChampionship() {
+  const main = document.getElementById('mainContent');
+
+  if (!champLoaded || !champRaces.length) {
+    const ok = await loadChampionshipData();
+    if (!ok) {
+      main.innerHTML = `<div class="center-state">
+        <div class="state-text" style="color:var(--muted);">
+          ${currentRace?.championship_id
+            ? '⚠️ Δεν βρέθηκαν αγώνες πρωταθλήματος.'
+            : '⚠️ Αυτός ο αγώνας δεν ανήκει σε πρωτάθλημα.'}
+        </div>
+      </div>`;
+      return;
+    }
+  }
+
+  const champId    = currentRace.championship_id;
+  const champTitle = champRaces[0]?.race_title || 'Πρωτάθλημα';
+  const roundsDone = champRaces.length;
+  const indiv      = calcChampionshipIndiv();
+  const teams      = calcChampionshipTeam();
+  const medals     = {1:'🥇',2:'🥈',3:'🥉'};
+
+  // --- Ατομική ---
+  const indivRows = indiv.map(a => {
+    const medal = medals[a.champRank] || a.champRank;
+    const rkc   = a.champRank===1?'rk1':a.champRank===2?'rk2':a.champRank===3?'rk3':'rko';
+    const tied  = a.tied?'<span class="tied">=</span>':'';
+    const ranksHtml = a.ranks.map(r=>`<span style="font-size:.7em;color:var(--muted);margin-right:4px;">Αγ.${r.round}:<b style="color:var(--cyan)">${r.rank}</b></span>`).join('');
+    return `<tr class="${a.champRank<=3?'r'+a.champRank:''}">
+      <td class="rank-cell ${rkc}">${medal}${tied}</td>
+      <td>
+        <span class="ath-name">${a.lastname} ${a.firstname}</span><br>
+        <span class="ath-club">${a.club||''}</span>
+      </td>
+      <td class="score-val" style="text-align:center;">${a.totalScore}</td>
+      <td class="sub-score" style="text-align:right;">${ranksHtml}</td>
+    </tr>`;
+  }).join('');
+
+  // --- Ομαδική ---
+  const teamRows = teams.map(t => {
+    const medal = medals[t.teamRank] || t.teamRank;
+    const rkc   = t.teamRank===1?'rk1':t.teamRank===2?'rk2':t.teamRank===3?'rk3':'rko';
+    const members = t.counting.map(a=>`<span style="font-size:.72em;color:var(--muted);">${a.lastname} ${a.firstname} <b style="color:var(--cyan)">(${a.totalScore}β)</b></span>`).join(' · ');
+    return `<tr class="${t.teamRank<=3?'r'+t.teamRank:''}">
+      <td class="rank-cell ${rkc}">${medal}</td>
+      <td>
+        <span class="ath-name">${t.club}</span><br>
+        <span style="font-size:.72em;color:var(--muted);">${members}</span>
+      </td>
+      <td class="score-val" style="text-align:center;">${t.teamScore}</td>
+    </tr>`;
+  }).join('');
+
+  main.innerHTML = `<div id="champView">
+    <!-- Header πρωταθλήματος -->
+    <div style="background:linear-gradient(135deg,rgba(255,214,0,.08),rgba(255,143,0,.06));border:1px solid rgba(255,214,0,.25);border-radius:10px;padding:12px 16px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+      <div>
+        <div style="font-size:.7em;color:var(--gold);font-weight:700;letter-spacing:1px;text-transform:uppercase;">🏆 Πρωτάθλημα</div>
+        <div style="font-size:1em;font-weight:700;color:var(--white);">${champTitle}</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <span class="meta-chip" style="background:rgba(255,214,0,.12);color:var(--gold);">📊 ${roundsDone} Αγωνιστικ${roundsDone===1?'ή':'ές'}</span>
+        <button onclick="refreshChampionship()" style="background:rgba(0,200,224,.12);border:1px solid rgba(0,200,224,.3);color:var(--cyan);border-radius:6px;padding:4px 12px;font-size:.78em;cursor:pointer;">🔄 Ανανέωση</button>
+      </div>
+    </div>
+
+    <!-- Ατομική -->
+    <div class="results-card" style="margin-bottom:12px;">
+      <div class="results-card-hdr">
+        <span class="results-card-title">ΑΤΟΜΙΚΗ ΚΑΤΑΤΑΞΗ ΠΡΩΤΑΘΛΗΜΑΤΟΣ</span>
+      </div>
+      <div class="overall-table-wrap">
+        <table class="rtable">
+          <thead><tr>
+            <th style="width:38px;">#</th>
+            <th>ΑΘΛΗΤΗΣ</th>
+            <th style="text-align:center;color:var(--gold);">Σύνολο Βαθμών</th>
+            <th style="text-align:right;color:var(--muted);">Ανά Αγώνα</th>
+          </tr></thead>
+          <tbody>${indiv.length ? indivRows : `<tr><td colspan="4" style="text-align:center;padding:18px;color:var(--muted);">Δεν υπάρχουν ακόμα αποτελέσματα</td></tr>`}</tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Ομαδική -->
+    <div class="results-card">
+      <div class="results-card-hdr">
+        <span class="results-card-title">ΟΜΑΔΙΚΗ ΚΑΤΑΤΑΞΗ ΠΡΩΤΑΘΛΗΜΑΤΟΣ</span>
+      </div>
+      <div class="results-card-subhdr" style="font-size:.72em;color:var(--muted);padding:4px 12px 8px;">
+        Βάσει των ${TEAM_COUNT || 3} καλύτερων αθλητών ανά σύλλογο
+      </div>
+      <div class="overall-table-wrap">
+        <table class="rtable">
+          <thead><tr>
+            <th style="width:38px;">#</th>
+            <th>ΣΥΛΛΟΓΟΣ</th>
+            <th style="text-align:center;color:var(--gold);">Σύνολο Βαθμών</th>
+          </tr></thead>
+          <tbody>${teams.length ? teamRows : `<tr><td colspan="3" style="text-align:center;padding:18px;color:var(--muted);">Ανεπαρκή στοιχεία για ομαδική κατάταξη</td></tr>`}</tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="footer">SFM Live v9 · Πρωτάθλημα · ${champId}</div>
+  </div>`;
+}
+
+async function refreshChampionship() {
+  champLoaded = false;
+  champRaces = [];
+  champMeasurements = {};
+  await renderChampionship();
+  showToast('🔄 Πρωτάθλημα ανανεώθηκε!');
+}
 </script>
 </body>
 </html>
