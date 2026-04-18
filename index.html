@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>🐟 SFM Live v16</title>
+<title>🐟 SFM Live v18</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
 
@@ -161,9 +161,9 @@ body { font-family:'IBM Plex Sans',sans-serif; background:var(--navy); color:var
 .score-val { font-family:'IBM Plex Mono',monospace; font-weight:600; font-size:.95em; color:var(--cyan); text-align:right; white-space:nowrap; }
 .score-unit { font-size:.7em; color:var(--muted); font-weight:400; }
 .sub-score { font-size:.72em; color:var(--muted); font-family:'IBM Plex Mono',monospace; text-align:right; white-space:nowrap; }
-.fish-chips { display:flex; flex-wrap:wrap; gap:3px; margin-top:3px; }
-.fish-chip { display:inline-block; padding:1px 5px; border-radius:4px; font-size:.65em; font-weight:600; background:rgba(0,200,224,.12); border:1px solid rgba(0,200,224,.25); color:var(--cyan); font-family:'IBM Plex Mono',monospace; }
-.fish-chip.max { background:rgba(255,193,7,.18); border-color:rgba(255,193,7,.5); color:#ffc107; }
+.fish-chips { display:flex; flex-wrap:wrap; gap:3px; margin-top:4px; }
+.fish-chip { display:inline-flex; align-items:center; height:20px; padding:2px 7px; border-radius:10px; font-size:11px; font-weight:600; background:#1a3a5c; border:1px solid rgba(0,200,224,0.3); color:#90caf9; font-family:'IBM Plex Mono',monospace; flex:0 0 auto; }
+.fish-chip.max { background:var(--orange); border-color:var(--orange); color:white; font-weight:700; }
 .fish-stats { display:flex; gap:8px; margin-top:3px; font-size:.68em; color:var(--muted); }
 .fish-stat { white-space:nowrap; }
 .tied { display:inline-block; background:rgba(255,214,0,0.15); border:1px solid rgba(255,214,0,0.3); color:var(--gold); font-size:.6em; padding:1px 5px; border-radius:4px; font-weight:700; margin-left:3px; vertical-align:middle; }
@@ -444,8 +444,8 @@ function buildAthletes() {
       if (!real) return;
 
       if (isFloat) {
-        real.totalWeight = (real.totalWeight || 0) + (ma.totalWeight || 0);
-        if ((ma.maxFish || 0) > (real.maxFish || 0)) real.maxFish = ma.maxFish || 0;
+        real.totalWeight = (real.totalWeight || 0) + Number(ma.totalWeight || 0);
+        if (Number(ma.maxFish || 0) > Number(real.maxFish || 0)) real.maxFish = Number(ma.maxFish || 0);
         // catches[0] = totalWeight, catches[1] = maxFish (για score engine)
         real.catches = [real.totalWeight, real.maxFish];
       } else {
@@ -493,6 +493,15 @@ function buildSectorData() {
     athletes: sec.athletes.map(a => enrichAthlete(a)),
     loanedIn: (sec.loanedIn || []).map(a => enrichAthlete(a))
   }));
+
+  // Guard: αν ο virtual τομέας του ατομικού έχει ήδη αρκετούς αθλητές → δεν είναι τεχνητός
+  const pegs = getPegsPerSector();
+  atomikoSectors.forEach(s => {
+    if (s.isVirtual && s.athletes.length >= pegs) {
+      s.isVirtual = false;
+      s.loanedIn  = [];
+    }
+  });
 
   omadikoSectors = (currentRace?.omadiko_sectors || []).map(sec => ({
     ...sec,
@@ -835,7 +844,7 @@ function renderDraw() {
     });
     html += `</tbody></table></div>`;
   });
-  html += `<div class="footer">SFM Live v16 · Κλήρωση</div></div>`;
+  html += `<div class="footer">SFM Live v18 · Κλήρωση</div></div>`;
   main.innerHTML = html;
 }
 
@@ -917,7 +926,7 @@ function renderLive() {
     html += `</div>`;
   });
 
-  html += `<div class="footer">SFM Live v16 · Live · Ανανέωση κάθε ${POLL_INTERVAL/1000}s</div></div>`;
+  html += `<div class="footer">SFM Live v18 · Live · Ανανέωση κάθε ${POLL_INTERVAL/1000}s</div></div>`;
   main.innerHTML = html;
 }
 
@@ -955,6 +964,7 @@ function renderSectorTable(list, title, isTeam) {
     const trClass = isLeader ? 'leader' : '';
 
     let dataCols = '';
+    let chipsHtml = '';
     if (isFloatRace) {
       const w  = sc.total   > 0 ? `${sc.total} <span class="score-unit">gr</span>`   : '—';
       const mx = sc.maxFish > 0 ? `${sc.maxFish} <span class="score-unit">gr</span>` : '—';
@@ -966,14 +976,14 @@ function renderSectorTable(list, title, isTeam) {
       const maxVal   = sc.maxFish;
       const totalCm  = sc.sortedCatches.reduce((s,c)=>s+c,0);
       const p10      = sc.fishCount * 10;
-      const chips    = sc.fishCount > 0
-        ? `<div class="fish-chips">${catches.map(cm=>`<span class="fish-chip${cm===maxVal?' max':''}">${cm}cm</span>`).join('')}</div>`
-        : '';
+      if (sc.fishCount > 0) {
+        chipsHtml = `<div class="fish-chips">${catches.map(cm=>`<span class="fish-chip${cm===maxVal?' max':''}">${cm}cm</span>`).join('')}</div>`;
+      }
       dataCols = `
         <td class="sub-score" style="text-align:center;">${sc.fishCount>0?sc.fishCount:'—'}</td>
         <td class="sub-score" style="text-align:right;">${totalCm>0?totalCm+'cm':'—'}</td>
         <td class="sub-score" style="text-align:right;">${p10>0?p10:'—'}</td>
-        <td class="score-val" style="font-size:.85em;">${sc.total>0?'<span style="color:var(--cyan);font-weight:700;">'+sc.total+'</span> <span class="score-unit">pts</span>':'—'}${chips?'<br>'+chips:''}</td>`;
+        <td class="score-val" style="font-size:.85em;">${sc.total>0?'<span style="color:var(--cyan);font-weight:700;">'+sc.total+'</span> <span class="score-unit">pts</span>':'—'}</td>`;
     }
 
     html += `<tr class="${trClass}">
@@ -981,6 +991,7 @@ function renderSectorTable(list, title, isTeam) {
       <td>
         <div class="ath-name">${a.lastname} ${a.firstname}<span class="ptype-badge ptype-${pt}">${pt}</span></div>
         <div class="ath-club">${a.club||''}</div>
+        ${chipsHtml}
       </td>
       ${dataCols}
       <td class="sub-score" style="text-align:right;${isLeader?'color:var(--gold);font-weight:700;':''}">${rank||'—'}</td>
@@ -1014,8 +1025,8 @@ function renderIndividual() {
   }
 
   const scoreTh = isFloatRace
-    ? `<th style="text-align:right;width:70px;">ΒΑΡΟΣ</th><th style="text-align:right;width:70px;">MAX</th>`
-    : `<th style="text-align:center;width:35px;">🐟</th><th style="text-align:right;width:50px;">CM</th><th style="text-align:right;width:50px;">MAX</th><th style="text-align:right;width:60px;color:var(--amber);">ΠΌΝΤΟΙ</th>`;
+    ? `<th style="text-align:right;width:80px;">ΒΑΡΟΣ (gr)</th><th style="text-align:right;width:70px;">MAX (gr)</th>`
+    : `<th style="text-align:center;width:32px;">🐟</th><th style="text-align:right;width:50px;">CM</th><th style="text-align:right;width:45px;">MAX</th><th style="text-align:right;width:60px;color:var(--amber);">ΠΌΝΤΟΙ</th>`;
 
   let html = `<div>`;
 
@@ -1049,6 +1060,8 @@ function renderIndividual() {
           <th style="width:36px;">ΚΑΤ.</th>
           <th style="width:44px;">ΘΕΣ.</th>
           <th>ΑΘΛΗΤΗΣ</th>
+          <th style="width:120px;">ΣΥΛΛΟΓΟΣ</th>
+          <th style="text-align:center;width:44px;">ΤΥΠΟΣ</th>
           ${scoreTh}
         </tr></thead>
         <tbody>`;
@@ -1065,6 +1078,7 @@ function renderIndividual() {
       const trStyle  = isLoaned ? 'background:rgba(255,107,43,.06);' : '';
 
       let dataCols = '';
+      let chipsHtml = '';
       if (isFloatRace) {
         const w  = sc.total   > 0 ? `${sc.total} <span class="score-unit">gr</span>`   : '—';
         const mx = sc.maxFish > 0 ? `${sc.maxFish} <span class="score-unit">gr</span>` : '—';
@@ -1074,28 +1088,25 @@ function renderIndividual() {
         const cm   = sc.sortedCatches.reduce((s,c)=>s+c,0);
         const mx   = sc.maxFish;
         const pts  = sc.total;
-        const chips = fish > 0
-          ? `<div class="fish-chips">${(a.catches||[]).map(v=>`<span class="fish-chip${v===mx?' max':''}">${v}cm</span>`).join('')}</div>`
-          : '';
+        if (fish > 0) {
+          chipsHtml = `<div class="fish-chips">${(a.catches||[]).map(v=>`<span class="fish-chip${v===mx?' max':''}">${v}cm</span>`).join('')}</div>`;
+        }
         dataCols = `
           <td class="sub-score" style="text-align:center;">${fish||'—'}</td>
           <td class="sub-score" style="text-align:right;">${cm||'—'}</td>
           <td class="sub-score" style="text-align:right;">${mx||'—'}</td>
           <td class="sub-score" style="text-align:right;color:var(--amber);font-weight:700;">${pts||'—'}</td>`;
-        if (chips) dataCols = `
-          <td class="sub-score" style="text-align:center;">${fish||'—'}</td>
-          <td class="sub-score" style="text-align:right;">${cm||'—'}</td>
-          <td class="sub-score" style="text-align:right;">${mx||'—'}</td>
-          <td class="sub-score" style="text-align:right;color:var(--amber);font-weight:700;">${pts||'—'}<br>${chips}</td>`;
       }
 
       html += `<tr style="${trStyle}">
         <td class="rank-cell ${rkc}" style="text-align:center;">${medal}</td>
         <td style="text-align:center;">${posCell}</td>
         <td>
-          <div class="ath-name ${isLoaned?'loaned-name':''}">${nameStr}<span class="ptype-badge ptype-${pt}">${pt}</span></div>
-          <div class="ath-club">${a.club||''}</div>
+          <div class="ath-name ${isLoaned?'loaned-name':''}">${nameStr}</div>
+          ${chipsHtml}
         </td>
+        <td class="ath-club" style="font-size:.75em;">${a.club||'—'}</td>
+        <td style="text-align:center;"><span class="ptype-badge ptype-${pt}">${pt}</span></td>
         ${dataCols}
       </tr>`;
     });
@@ -1103,7 +1114,7 @@ function renderIndividual() {
     html += `</tbody></table></div>`;
   });
 
-  html += `<div class="footer">SFM Live v16 · Ατομική τομέων · Ανανέωση κάθε ${POLL_INTERVAL/1000}s</div></div>`;
+  html += `<div class="footer">SFM Live v18 · Ατομική τομέων · Ανανέωση κάθε ${POLL_INTERVAL/1000}s</div></div>`;
   main.innerHTML = html;
 }
 
@@ -1120,8 +1131,8 @@ function renderTeam() {
   }
 
   const scoreTh = isFloatRace
-    ? `<th style="text-align:right;width:70px;">ΒΑΡΟΣ</th><th style="text-align:right;width:70px;">MAX</th>`
-    : `<th style="text-align:center;width:35px;">🐟</th><th style="text-align:right;width:50px;">CM</th><th style="text-align:right;width:50px;">MAX</th><th style="text-align:right;width:60px;color:var(--amber);">ΠΌΝΤΟΙ</th>`;
+    ? `<th style="text-align:right;width:80px;">ΒΑΡΟΣ (gr)</th><th style="text-align:right;width:70px;">MAX (gr)</th>`
+    : `<th style="text-align:center;width:32px;">🐟</th><th style="text-align:right;width:50px;">CM</th><th style="text-align:right;width:45px;">MAX</th><th style="text-align:right;width:60px;color:var(--amber);">ΠΌΝΤΟΙ</th>`;
 
   let html = `<div>`;
 
@@ -1155,6 +1166,8 @@ function renderTeam() {
           <th style="width:36px;">ΚΑΤ.</th>
           <th style="width:44px;">ΘΕΣ.</th>
           <th>ΑΘΛΗΤΗΣ</th>
+          <th style="width:120px;">ΣΥΛΛΟΓΟΣ</th>
+          <th style="text-align:center;width:44px;">ΤΥΠΟΣ</th>
           ${scoreTh}
         </tr></thead>
         <tbody>`;
@@ -1171,6 +1184,7 @@ function renderTeam() {
       const trStyle  = isLoaned ? 'background:rgba(255,107,43,.06);' : '';
 
       let dataCols = '';
+      let chipsHtml = '';
       if (isFloatRace) {
         const w  = sc.total   > 0 ? `${sc.total} <span class="score-unit">gr</span>`   : '—';
         const mx = sc.maxFish > 0 ? `${sc.maxFish} <span class="score-unit">gr</span>` : '—';
@@ -1180,23 +1194,25 @@ function renderTeam() {
         const cm   = sc.sortedCatches.reduce((s,c)=>s+c,0);
         const mx   = sc.maxFish;
         const pts  = sc.total;
-        const chips = fish > 0
-          ? `<div class="fish-chips">${(a.catches||[]).map(v=>`<span class="fish-chip${v===mx?' max':''}">${v}cm</span>`).join('')}</div>`
-          : '';
+        if (fish > 0) {
+          chipsHtml = `<div class="fish-chips">${(a.catches||[]).map(v=>`<span class="fish-chip${v===mx?' max':''}">${v}cm</span>`).join('')}</div>`;
+        }
         dataCols = `
           <td class="sub-score" style="text-align:center;">${fish||'—'}</td>
           <td class="sub-score" style="text-align:right;">${cm||'—'}</td>
           <td class="sub-score" style="text-align:right;">${mx||'—'}</td>
-          <td class="sub-score" style="text-align:right;color:var(--amber);font-weight:700;">${pts||'—'}${chips?'<br>'+chips:''}</td>`;
+          <td class="sub-score" style="text-align:right;color:var(--amber);font-weight:700;">${pts||'—'}</td>`;
       }
 
       html += `<tr style="${trStyle}">
         <td class="rank-cell ${rkc}" style="text-align:center;">${medal}</td>
         <td style="text-align:center;">${posCell}</td>
         <td>
-          <div class="ath-name ${isLoaned?'loaned-name':''}">${nameStr}<span class="ptype-badge ptype-${pt}">${pt}</span></div>
-          <div class="ath-club">${a.club||''}</div>
+          <div class="ath-name ${isLoaned?'loaned-name':''}">${nameStr}</div>
+          ${chipsHtml}
         </td>
+        <td class="ath-club" style="font-size:.75em;">${a.club||'—'}</td>
+        <td style="text-align:center;"><span class="ptype-badge ptype-${pt}">${pt}</span></td>
         ${dataCols}
       </tr>`;
     });
@@ -1204,7 +1220,7 @@ function renderTeam() {
     html += `</tbody></table></div>`;
   });
 
-  html += `<div class="footer">SFM Live v16 · Ομαδική τομέων · Ανανέωση κάθε ${POLL_INTERVAL/1000}s</div></div>`;
+  html += `<div class="footer">SFM Live v18 · Ομαδική τομέων · Ανανέωση κάθε ${POLL_INTERVAL/1000}s</div></div>`;
   main.innerHTML = html;
 }
 
@@ -1324,7 +1340,7 @@ function renderChampionshipData() {
         </table>
       </div>
     </div>
-    <div class="footer">SFM Live v16 · Πρωτάθλημα</div>
+    <div class="footer">SFM Live v18 · Πρωτάθλημα</div>
   </div>`;
 }
 
