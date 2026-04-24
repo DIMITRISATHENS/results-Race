@@ -141,7 +141,7 @@ body { font-family:'IBM Plex Sans',sans-serif; background:var(--navy); color:var
 .sector-chip.active { background:var(--blue); border-color:var(--cyan); color:white; }
 
 /* RESULTS CARD */
-.results-card { background:var(--card); border:1px solid var(--border); border-radius:14px; overflow:hidden; margin-bottom:14px; }
+.results-card { background:var(--card); border:1px solid var(--border); border-radius:14px; overflow:visible; margin-bottom:14px; }
 .results-card-hdr { padding:10px 14px; background:rgba(0,200,224,0.06); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:8px; }
 .results-card-title { font-family:'Bebas Neue',sans-serif; font-size:1.05em; letter-spacing:2px; color:var(--cyan); }
 
@@ -171,6 +171,8 @@ body { font-family:'IBM Plex Sans',sans-serif; background:var(--navy); color:var
 .done-badge { color:var(--green); font-size:.75em; font-weight:700; }
 .overall-table-wrap { overflow-x:auto; }
 .overall-table-wrap .rtable { min-width:360px; }
+.table-scroll-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+.table-scroll-wrap .rtable { min-width:420px; }
 .ath-name { font-weight:700; color:var(--white); font-size:.85em; line-height:1.3; }
 .ath-club { font-size:.72em; color:var(--muted); margin-top:1px; }
 .ath-sponsor { font-size:.7em; color:var(--amber); margin-top:1px; }
@@ -946,7 +948,7 @@ function renderSectorTable(list, title, isTeam) {
 
   let html = `<div style="padding:0 0 4px;">
     <div style="font-size:.72em;color:var(--muted);font-weight:700;letter-spacing:.8px;padding:8px 14px 4px;">${title}</div>
-    <table class="rtable">
+    <div class="table-scroll-wrap"><table class="rtable">
       <thead><tr>
         <th style="width:36px;">ΘΕΣ.</th>
         <th>ΑΘΛΗΤΗΣ</th>
@@ -994,7 +996,7 @@ function renderSectorTable(list, title, isTeam) {
     </tr>`;
   });
 
-  html += `</tbody></table></div>`;
+  html += `</tbody></table></div></div>`;
   return html;
 }
 
@@ -1051,7 +1053,7 @@ function renderIndividual() {
         <span class="results-card-title">ΤΟΜΕΑΣ ${sec.name}${virtBadge}</span>
         <span class="done-badge">${doneCnt}${isFloatRace?'':'/10'} ✓</span>
       </div>
-      <table class="rtable">
+      <div class="table-scroll-wrap"><table class="rtable">
         <thead><tr>
           <th style="width:36px;">ΚΑΤ.</th>
           <th style="width:44px;">ΘΕΣ.</th>
@@ -1104,7 +1106,7 @@ function renderIndividual() {
       </tr>`;
     });
 
-    html += `</tbody></table></div>`;
+    html += `</tbody></table></div></div>`;
   });
 
   html += `<div class="footer">SFM Live v18 · Ατομική τομέων · Ανανέωση κάθε ${POLL_INTERVAL/1000}s</div></div>`;
@@ -1154,7 +1156,7 @@ function renderTeam() {
         <span class="results-card-title">ΤΟΜΕΑΣ ${sec.name}${virtBadge}</span>
         <span class="done-badge">${doneCnt}${isFloatRace?'':'/10'} ✓</span>
       </div>
-      <table class="rtable">
+      <div class="table-scroll-wrap"><table class="rtable">
         <thead><tr>
           <th style="width:36px;">ΚΑΤ.</th>
           <th style="width:44px;">ΘΕΣ.</th>
@@ -1207,7 +1209,7 @@ function renderTeam() {
       </tr>`;
     });
 
-    html += `</tbody></table></div>`;
+    html += `</tbody></table></div></div>`;
   });
 
   html += `<div class="footer">SFM Live v18 · Ομαδική τομέων · Ανανέωση κάθε ${POLL_INTERVAL/1000}s</div></div>`;
