@@ -964,7 +964,6 @@ function renderSectorTable(list, title, isTeam) {
     const trClass = isLeader ? 'leader' : '';
 
     let dataCols = '';
-    let chipsHtml = '';
     if (isFloatRace) {
       const w  = sc.total   > 0 ? `${sc.total} <span class="score-unit">gr</span>`   : '—';
       const mx = sc.maxFish > 0 ? `${sc.maxFish} <span class="score-unit">gr</span>` : '—';
@@ -976,13 +975,11 @@ function renderSectorTable(list, title, isTeam) {
       const maxVal   = sc.maxFish;
       const totalCm  = sc.sortedCatches.reduce((s,c)=>s+c,0);
       const p10      = sc.fishCount * 10;
-      if (sc.fishCount > 0) {
-        chipsHtml = `<div class="fish-chips">${catches.map(cm=>`<span class="fish-chip${cm===maxVal?' max':''}">${cm}cm</span>`).join('')}</div>`;
-      }
+      const maxChip = maxVal > 0 ? `<span class="fish-chip max" style="margin-left:5px;vertical-align:middle;">${maxVal}cm</span>` : '';
       dataCols = `
         <td class="sub-score" style="text-align:center;">${sc.fishCount>0?sc.fishCount:'—'}</td>
         <td class="sub-score" style="text-align:right;">${totalCm>0?totalCm+'cm':'—'}</td>
-        <td class="sub-score" style="text-align:right;">${p10>0?p10:'—'}</td>
+        <td class="sub-score" style="text-align:right;white-space:nowrap;">${p10>0?p10:'—'}${maxChip}</td>
         <td class="score-val" style="font-size:.85em;">${sc.total>0?'<span style="color:var(--cyan);font-weight:700;">'+sc.total+'</span> <span class="score-unit">pts</span>':'—'}</td>`;
     }
 
@@ -991,7 +988,6 @@ function renderSectorTable(list, title, isTeam) {
       <td>
         <div class="ath-name">${a.lastname} ${a.firstname}<span class="ptype-badge ptype-${pt}">${pt}</span></div>
         <div class="ath-club">${a.club||''}</div>
-        ${chipsHtml}
       </td>
       ${dataCols}
       <td class="sub-score" style="text-align:right;${isLeader?'color:var(--gold);font-weight:700;':''}">${rank||'—'}</td>
@@ -1026,7 +1022,7 @@ function renderIndividual() {
 
   const scoreTh = isFloatRace
     ? `<th style="text-align:right;width:80px;">ΒΑΡΟΣ (gr)</th><th style="text-align:right;width:70px;">MAX (gr)</th>`
-    : `<th style="text-align:center;width:32px;">🐟</th><th style="text-align:right;width:50px;">CM</th><th style="text-align:right;width:45px;">MAX</th><th style="text-align:right;width:60px;color:var(--amber);">ΠΌΝΤΟΙ</th>`;
+    : `<th style="text-align:center;width:32px;">🐟</th><th style="text-align:right;width:50px;">CM</th><th style="text-align:right;width:42px;">Πχ10</th><th style="text-align:right;width:45px;">MAX</th><th style="text-align:right;width:60px;color:var(--amber);">ΠΌΝΤΟΙ</th>`;
 
   let html = `<div>`;
 
@@ -1078,8 +1074,7 @@ function renderIndividual() {
       const trStyle  = isLoaned ? 'background:rgba(255,107,43,.06);' : '';
 
       let dataCols = '';
-      let chipsHtml = '';
-      if (isFloatRace) {
+        if (isFloatRace) {
         const w  = sc.total   > 0 ? `${sc.total} <span class="score-unit">gr</span>`   : '—';
         const mx = sc.maxFish > 0 ? `${sc.maxFish} <span class="score-unit">gr</span>` : '—';
         dataCols = `<td class="sub-score" style="text-align:right;">${w}</td><td class="sub-score" style="text-align:right;">${mx}</td>`;
@@ -1088,12 +1083,11 @@ function renderIndividual() {
         const cm   = sc.sortedCatches.reduce((s,c)=>s+c,0);
         const mx   = sc.maxFish;
         const pts  = sc.total;
-        if (fish > 0) {
-          chipsHtml = `<div class="fish-chips">${(a.catches||[]).map(v=>`<span class="fish-chip${v===mx?' max':''}">${v}cm</span>`).join('')}</div>`;
-        }
+        const p10 = fish * 10;
         dataCols = `
           <td class="sub-score" style="text-align:center;">${fish||'—'}</td>
           <td class="sub-score" style="text-align:right;">${cm||'—'}</td>
+          <td class="sub-score" style="text-align:right;">${p10||'—'}</td>
           <td class="sub-score" style="text-align:right;">${mx||'—'}</td>
           <td class="sub-score" style="text-align:right;color:var(--amber);font-weight:700;">${pts||'—'}</td>`;
       }
@@ -1103,8 +1097,7 @@ function renderIndividual() {
         <td style="text-align:center;">${posCell}</td>
         <td>
           <div class="ath-name ${isLoaned?'loaned-name':''}">${nameStr}</div>
-          ${chipsHtml}
-        </td>
+          </td>
         <td class="ath-club" style="font-size:.75em;">${a.club||'—'}</td>
         <td style="text-align:center;"><span class="ptype-badge ptype-${pt}">${pt}</span></td>
         ${dataCols}
@@ -1132,7 +1125,7 @@ function renderTeam() {
 
   const scoreTh = isFloatRace
     ? `<th style="text-align:right;width:80px;">ΒΑΡΟΣ (gr)</th><th style="text-align:right;width:70px;">MAX (gr)</th>`
-    : `<th style="text-align:center;width:32px;">🐟</th><th style="text-align:right;width:50px;">CM</th><th style="text-align:right;width:45px;">MAX</th><th style="text-align:right;width:60px;color:var(--amber);">ΠΌΝΤΟΙ</th>`;
+    : `<th style="text-align:center;width:32px;">🐟</th><th style="text-align:right;width:50px;">CM</th><th style="text-align:right;width:42px;">Πχ10</th><th style="text-align:right;width:45px;">MAX</th><th style="text-align:right;width:60px;color:var(--amber);">ΠΌΝΤΟΙ</th>`;
 
   let html = `<div>`;
 
@@ -1184,8 +1177,7 @@ function renderTeam() {
       const trStyle  = isLoaned ? 'background:rgba(255,107,43,.06);' : '';
 
       let dataCols = '';
-      let chipsHtml = '';
-      if (isFloatRace) {
+        if (isFloatRace) {
         const w  = sc.total   > 0 ? `${sc.total} <span class="score-unit">gr</span>`   : '—';
         const mx = sc.maxFish > 0 ? `${sc.maxFish} <span class="score-unit">gr</span>` : '—';
         dataCols = `<td class="sub-score" style="text-align:right;">${w}</td><td class="sub-score" style="text-align:right;">${mx}</td>`;
@@ -1194,12 +1186,11 @@ function renderTeam() {
         const cm   = sc.sortedCatches.reduce((s,c)=>s+c,0);
         const mx   = sc.maxFish;
         const pts  = sc.total;
-        if (fish > 0) {
-          chipsHtml = `<div class="fish-chips">${(a.catches||[]).map(v=>`<span class="fish-chip${v===mx?' max':''}">${v}cm</span>`).join('')}</div>`;
-        }
+        const p10 = fish * 10;
         dataCols = `
           <td class="sub-score" style="text-align:center;">${fish||'—'}</td>
           <td class="sub-score" style="text-align:right;">${cm||'—'}</td>
+          <td class="sub-score" style="text-align:right;">${p10||'—'}</td>
           <td class="sub-score" style="text-align:right;">${mx||'—'}</td>
           <td class="sub-score" style="text-align:right;color:var(--amber);font-weight:700;">${pts||'—'}</td>`;
       }
@@ -1209,8 +1200,7 @@ function renderTeam() {
         <td style="text-align:center;">${posCell}</td>
         <td>
           <div class="ath-name ${isLoaned?'loaned-name':''}">${nameStr}</div>
-          ${chipsHtml}
-        </td>
+          </td>
         <td class="ath-club" style="font-size:.75em;">${a.club||'—'}</td>
         <td style="text-align:center;"><span class="ptype-badge ptype-${pt}">${pt}</span></td>
         ${dataCols}
