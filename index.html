@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>🐟 SFM Live v18</title>
+<title>🐟 SFM Live v19</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
 
@@ -454,7 +454,7 @@ function buildAthletes() {
         const fish = Array.isArray(ma.fish) ? ma.fish : [];
         real.catches = [...(real.catches || []), ...fish];
       }
-      if (ma.status && ma.status !== 'normal' && ma.status !== 'signed') {
+      if (ma.status && ma.status !== 'normal' && ma.status !== 'signed' && ma.status !== 'resigned') {
         real.status = ma.status;
       }
     });
@@ -477,10 +477,12 @@ function buildSectorData() {
   const pegsPerSector = getPegsPerSector();
   const penalty = pegsPerSector + 1;
 
-  function calcRanks(sectors) {
+  // excludeLoanedFromVirtual: true για ομαδική (δανεικοί δεν επηρεάζουν virtual τομέα)
+  function calcRanks(sectors, excludeLoanedFromVirtual = false) {
     sectors.forEach(sec => {
-      const all = [...sec.athletes, ...sec.loanedIn];
-      const normal = all.filter(a => ['normal','equipment','signed'].includes(a.status));
+      const loanedForRank = (excludeLoanedFromVirtual && sec.isVirtual) ? [] : sec.loanedIn;
+      const all = [...sec.athletes, ...loanedForRank];
+      const normal = all.filter(a => ['normal','equipment','signed','resigned'].includes(a.status));
       const penaltyList = all.filter(a => ['absent','disqualified'].includes(a.status));
       const scored = normal.map(a => ({ a, ...scoreAthlete(a) }));
       scored.sort((x, y) => sortScore(x, y));
@@ -512,7 +514,7 @@ function buildSectorData() {
   }));
 
   calcRanks(atomikoSectors);
-  calcRanks(omadikoSectors);
+  calcRanks(omadikoSectors, true); // δανεικοί εκτός virtual τομέα για ομαδική
 }
 
 // Κοινή ταξινόμηση σκορ (casting + float)
@@ -618,7 +620,7 @@ function calcSectorRankings() {
 
   getSectors().forEach(sec => {
     const sectorAthletes = athletes.filter(a => a.sector === sec.name);
-    const normal  = sectorAthletes.filter(a => ['normal','equipment','signed'].includes(a.status));
+    const normal  = sectorAthletes.filter(a => ['normal','equipment','signed','resigned'].includes(a.status));
     const penaltyA= sectorAthletes.filter(a => ['absent','disqualified'].includes(a.status));
 
     // ΑΤΟΜΙΚΗ (A + AO)
