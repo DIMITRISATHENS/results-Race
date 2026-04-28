@@ -271,6 +271,16 @@ let currentView  = 'draw';
 let currentSector= null;
 let pollingTimer = null;
 
+// sessionStorage key για αποθήκευση τελευταίου tab
+const SESSION_KEY = 'sfmlive_tab';
+
+function saveTab(view) {
+  try { sessionStorage.setItem(SESSION_KEY, view); } catch(e) {}
+}
+function savedTab(defaultView) {
+  try { return sessionStorage.getItem(SESSION_KEY) || defaultView; } catch(e) { return defaultView; }
+}
+
 // ============================================================
 // INIT
 // ============================================================
@@ -292,6 +302,7 @@ async function loadRaceByUid(uid) {
     if (!rows.length) { showError('Ο αγώνας δεν βρέθηκε ή δεν είναι ενεργός.<br><small>Ελέγξτε το link.</small>'); return; }
     races = rows;
     document.getElementById('raceSelectorWrap').style.display = 'none';
+    currentView = savedTab('draw');
     await selectRace(rows[0].id);
   } catch(e) { showError(e.message); }
 }
@@ -305,8 +316,8 @@ async function loadRaceByChamp(champId) {
     races = rows;
     if (rows.length > 1) populateDropdown();
     else document.getElementById('raceSelectorWrap').style.display = 'none';
-    // Ορίζουμε το tab ΠΡΙΝ το selectRace ώστε να μη χαθεί σε επανεκκίνηση
-    currentView = 'championship';
+    // Επαναφορά τελευταίου tab — αν δεν υπάρχει αποθηκευμένο, default = championship
+    currentView = savedTab('championship');
     await selectRace(rows[0].id);
   } catch(e) { showError(e.message); }
 }
@@ -318,6 +329,7 @@ async function loadRaces() {
     races = await res.json();
     if (!races.length) { showNoRaces(); return; }
     populateDropdown();
+    currentView = savedTab('draw');
     await selectRace(races[0].id);
   } catch(e) { showError(e.message); }
 }
@@ -421,6 +433,7 @@ function refreshCurrentView() {
 function showView(view) {
   if (view !== currentView) currentSector = null;
   currentView = view;
+  saveTab(view);
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   const tabEl = document.getElementById('tab-' + view);
   if (tabEl) tabEl.classList.add('active');
