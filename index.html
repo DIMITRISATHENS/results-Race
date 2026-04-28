@@ -446,16 +446,26 @@ function showView(view) {
   else if (view === 'championship') renderChampionship();
 }
 
-// ── ΚΛΗΡΩΣΗ ─────────────────────────────────────────────────
 function renderDraw() {
-  const main    = document.getElementById('mainContent');
+  const main = document.getElementById('mainContent');
+
+  // Αν η κλήρωση δεν έχει παρουσιαστεί → κρύβουμε θέσεις
+  if (!currentRace.cinema_played_at) {
+    main.innerHTML = `<div class="center-state">
+      <div class="state-icon">🔒</div>
+      <div class="state-title">ΚΛΗΡΩΣΗ</div>
+      <div class="state-text">
+        Η κλήρωση δεν έχει γινει !!! <br>
+        
+      </div>
+    </div>`;
+    return;
+  }
+
   const sectors = currentRace.sectors || [];
   const drawAthletes = currentRace.athletes || [];
 
   if (!sectors.length) {
-    main.innerHTML = noDataHtml('Δεν υπάρχουν τομείς στην κλήρωση.');
-    return;
-  }
 
   let html = `<div>
     <div class="search-wrap">
