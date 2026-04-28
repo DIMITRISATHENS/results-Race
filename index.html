@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>🐟 SFM Live v18</title>
+<title>🐟 SFM Live v19</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
 
@@ -28,11 +28,10 @@
   --orange:  #ff6b2b;
 }
 
-
-*{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 body { font-family:'IBM Plex Sans',sans-serif; background:var(--navy); color:var(--white); min-height:100vh; overflow-x:hidden; }
 
-/* HEADER */
+/* ── HEADER ─────────────────────────────────────────────── */
 .header {
   background:linear-gradient(160deg,var(--navy3) 0%,var(--navy2) 100%);
   border-bottom:1px solid var(--border2);
@@ -53,7 +52,7 @@ body { font-family:'IBM Plex Sans',sans-serif; background:var(--navy); color:var
 .live-dot { width:7px; height:7px; background:var(--red); border-radius:50%; animation:blink 1.3s ease-in-out infinite; }
 @keyframes blink { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.3;transform:scale(.6)} }
 
-/* RACE SELECTOR */
+/* ── RACE SELECTOR ─────────────────────────────────────── */
 .race-selector { margin-top:8px; position:relative; }
 .race-select {
   width:100%; padding:10px 36px 10px 12px;
@@ -68,7 +67,7 @@ body { font-family:'IBM Plex Sans',sans-serif; background:var(--navy); color:var
 .meta-chip { font-size:.7em; font-weight:600; background:rgba(0,200,224,0.1); border:1px solid var(--border); border-radius:8px; padding:2px 8px; color:var(--muted); }
 .meta-chip.gt { background:rgba(255,214,0,0.1); border-color:rgba(255,214,0,0.3); color:var(--gold); }
 
-/* NAV TABS */
+/* ── NAV TABS ───────────────────────────────────────────── */
 .nav-tabs { display:flex; gap:0; background:var(--navy2); border-bottom:1px solid var(--border2); }
 .nav-tab {
   flex:1; padding:11px 4px;
@@ -81,18 +80,18 @@ body { font-family:'IBM Plex Sans',sans-serif; background:var(--navy); color:var
 .nav-tab.gold-tab { background:linear-gradient(135deg,rgba(255,214,0,.15),rgba(255,143,0,.1)); color:var(--gold); }
 .nav-tab.gold-tab.active { border-bottom-color:var(--gold); }
 
-/* MAIN */
+/* ── MAIN ───────────────────────────────────────────────── */
 .main { padding:12px 14px 100px; }
 
-/* LOADING/EMPTY */
+/* ── STATES ─────────────────────────────────────────────── */
 .center-state { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:50vh; gap:14px; text-align:center; }
-.state-icon { font-size:3em; }
+.state-icon  { font-size:3em; }
 .state-title { font-family:'Bebas Neue',sans-serif; font-size:1.6em; letter-spacing:3px; color:var(--cyan); }
-.state-text { font-size:0.85em; color:var(--muted); line-height:1.6; max-width:260px; }
-.spinner { width:36px; height:36px; border:3px solid var(--border2); border-top-color:var(--cyan); border-radius:50%; animation:spin .8s linear infinite; }
-@keyframes spin{to{transform:rotate(360deg)}}
+.state-text  { font-size:0.85em; color:var(--muted); line-height:1.6; max-width:260px; }
+.spinner     { width:36px; height:36px; border:3px solid var(--border2); border-top-color:var(--cyan); border-radius:50%; animation:spin .8s linear infinite; }
+@keyframes spin { to{transform:rotate(360deg)} }
 
-/* SEARCH */
+/* ── SEARCH ─────────────────────────────────────────────── */
 .search-wrap { position:relative; margin-bottom:12px; }
 .search-input {
   width:100%; padding:10px 14px 10px 38px;
@@ -105,7 +104,7 @@ body { font-family:'IBM Plex Sans',sans-serif; background:var(--navy); color:var
 .search-icon { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--muted); }
 .search-result-highlight { background:rgba(0,200,224,0.12) !important; border-left:3px solid var(--cyan) !important; }
 
-/* SECTOR CARD */
+/* ── SECTOR BLOCK (Κλήρωση) ─────────────────────────────── */
 .sector-block { background:var(--card); border:1px solid var(--border); border-radius:14px; overflow:hidden; margin-bottom:14px; }
 .sector-block-hdr {
   padding:10px 14px;
@@ -115,89 +114,93 @@ body { font-family:'IBM Plex Sans',sans-serif; background:var(--navy); color:var
 }
 .sector-block-title { font-family:'Bebas Neue',sans-serif; font-size:1.1em; letter-spacing:2px; color:var(--cyan); }
 .sector-block-sub { font-size:.72em; color:var(--muted); }
-
-/* DRAW TABLE */
 .draw-table { width:100%; border-collapse:collapse; font-size:.82em; table-layout:fixed; }
-.draw-table thead th { background:rgba(0,200,224,0.06); color:var(--muted); font-size:.68em; font-weight:700; letter-spacing:.8px; text-transform:uppercase; padding:5px 8px; border-bottom:1px solid var(--border); text-align:left; }
 .draw-table col.col-pos { width:42px; }
 .draw-table col.col-athlete { width:55%; }
+.draw-table thead th { background:rgba(0,200,224,0.06); color:var(--muted); font-size:.68em; font-weight:700; letter-spacing:.8px; text-transform:uppercase; padding:5px 8px; border-bottom:1px solid var(--border); text-align:left; }
 .draw-table tbody tr { border-bottom:1px solid rgba(255,255,255,0.04); }
 .draw-table tbody tr:last-child { border-bottom:none; }
 .draw-table td { padding:7px 8px; vertical-align:middle; }
 .draw-table td.club-cell { font-size:.78em; color:var(--muted); word-break:break-word; }
 .pos-cell { font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:.9em; color:var(--cyan); text-align:center; }
 
-/* PROGRESS */
+/* ── PROGRESS ───────────────────────────────────────────── */
 .progress-card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:12px 14px; margin-bottom:12px; display:flex; align-items:center; gap:14px; }
 .progress-nums { font-family:'Bebas Neue',sans-serif; font-size:1.8em; color:var(--cyan); line-height:1; white-space:nowrap; }
 .progress-label { font-size:.75em; color:var(--muted); margin-top:2px; }
 .pbar-wrap { flex:1; height:6px; background:rgba(255,255,255,0.07); border-radius:99px; overflow:hidden; }
 .pbar-fill { height:100%; background:linear-gradient(90deg,var(--blue),var(--cyan)); border-radius:99px; transition:width .6s ease; }
 
-/* SECTOR STRIP */
+/* ── PUBLISHED AT banner ────────────────────────────────── */
+.pub-banner {
+  display:flex; align-items:center; justify-content:space-between; gap:8px;
+  background:rgba(0,230,118,0.07); border:1px solid rgba(0,230,118,0.2);
+  border-radius:10px; padding:8px 14px; margin-bottom:12px;
+  font-size:.75em;
+}
+.pub-time { color:var(--green); font-weight:700; }
+.pub-label { color:var(--muted); }
+
+/* ── SECTOR STRIP ───────────────────────────────────────── */
 .sector-strip { display:flex; gap:6px; overflow-x:auto; padding-bottom:10px; scrollbar-width:none; margin-bottom:10px; }
-.sector-strip::-webkit-scrollbar{display:none;}
+.sector-strip::-webkit-scrollbar { display:none; }
 .sector-chip { flex-shrink:0; padding:6px 14px; background:var(--card); border:1px solid var(--border); border-radius:20px; font-size:.82em; font-weight:700; color:var(--muted); cursor:pointer; transition:all .2s; }
 .sector-chip.active { background:var(--blue); border-color:var(--cyan); color:white; }
 
-/* RESULTS CARD */
+/* ── RESULTS CARD ───────────────────────────────────────── */
 .results-card { background:var(--card); border:1px solid var(--border); border-radius:14px; overflow:hidden; margin-bottom:14px; }
 .results-card-hdr { padding:10px 14px; background:rgba(0,200,224,0.06); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:8px; }
 .results-card-title { font-family:'Bebas Neue',sans-serif; font-size:1.05em; letter-spacing:2px; color:var(--cyan); }
+.done-badge { color:var(--green); font-size:.75em; font-weight:700; }
 
-/* RESULT TABLE */
+/* ── RESULT TABLE ───────────────────────────────────────── */
 .rtable { width:100%; border-collapse:collapse; font-size:.875em; }
 .rtable thead th { background:rgba(0,200,224,0.07); color:var(--muted); font-size:.72em; font-weight:700; letter-spacing:.8px; text-transform:uppercase; padding:6px 8px; border-bottom:1px solid var(--border); }
-.rtable tbody tr { border-bottom:1px solid rgba(255,255,255,0.04); transition:background .15s; }
-.rtable tbody tr:hover { background:rgba(0,200,224,0.04); }
+.rtable tbody tr { border-bottom:1px solid rgba(255,255,255,0.04); }
 .rtable tbody tr:last-child { border-bottom:none; }
 .rtable td { padding:6px 8px; vertical-align:middle; }
-.rtable tbody tr.r1 { background:rgba(255,214,0,0.05); }
-.rtable tbody tr.leader { background:rgba(255,214,0,0.08); border-left:3px solid var(--gold); }
-.rtable tbody tr.r2 { background:rgba(176,190,197,0.04); }
-.rtable tbody tr.r3 { background:rgba(255,143,0,0.04); }
+.rtable tbody tr.r1   { background:rgba(255,214,0,0.05); }
+.rtable tbody tr.r2   { background:rgba(176,190,197,0.04); }
+.rtable tbody tr.r3   { background:rgba(255,143,0,0.04); }
+.rtable tbody tr.loaned-row { background:rgba(255,107,43,0.06); }
 .rank-cell { font-family:'Bebas Neue',sans-serif; font-size:1.35em; text-align:center; width:38px; }
-.rk1{color:var(--gold);} .rk2{color:var(--silver);} .rk3{color:var(--bronze);} .rko{color:var(--muted);}
-.score-val { font-family:'IBM Plex Mono',monospace; font-weight:600; font-size:.95em; color:var(--cyan); text-align:right; white-space:nowrap; }
+.rk1{color:var(--gold);}  .rk2{color:var(--silver);}  .rk3{color:var(--bronze);}  .rko{color:var(--muted);}
+.score-val  { font-family:'IBM Plex Mono',monospace; font-weight:600; font-size:.95em; color:var(--cyan); text-align:right; white-space:nowrap; }
 .score-unit { font-size:.7em; color:var(--muted); font-weight:400; }
-.sub-score { font-size:.72em; color:var(--muted); font-family:'IBM Plex Mono',monospace; text-align:right; white-space:nowrap; }
-.fish-chips { display:flex; flex-wrap:wrap; gap:3px; margin-top:4px; }
-.fish-chip { display:inline-flex; align-items:center; height:20px; padding:2px 7px; border-radius:10px; font-size:11px; font-weight:600; background:#1a3a5c; border:1px solid rgba(0,200,224,0.3); color:#90caf9; font-family:'IBM Plex Mono',monospace; flex:0 0 auto; }
-.fish-chip.max { background:var(--orange); border-color:var(--orange); color:white; font-weight:700; }
-.fish-stats { display:flex; gap:8px; margin-top:3px; font-size:.68em; color:var(--muted); }
-.fish-stat { white-space:nowrap; }
-.tied { display:inline-block; background:rgba(255,214,0,0.15); border:1px solid rgba(255,214,0,0.3); color:var(--gold); font-size:.6em; padding:1px 5px; border-radius:4px; font-weight:700; margin-left:3px; vertical-align:middle; }
-.inc-badge { display:inline-flex; align-items:center; gap:3px; background:rgba(255,214,0,0.1); border:1px solid rgba(255,214,0,0.25); color:var(--gold); font-size:.7em; padding:2px 8px; border-radius:6px; font-weight:600; }
-.done-badge { color:var(--green); font-size:.75em; font-weight:700; }
-.overall-table-wrap { overflow-x:auto; }
-.overall-table-wrap .rtable { min-width:360px; }
-.ath-name { font-weight:700; color:var(--white); font-size:.85em; line-height:1.3; }
-.ath-club { font-size:.72em; color:var(--muted); margin-top:1px; }
-.ath-sponsor { font-size:.7em; color:var(--amber); margin-top:1px; }
+.sub-score  { font-size:.72em; color:var(--muted); font-family:'IBM Plex Mono',monospace; text-align:right; white-space:nowrap; }
+.ath-name   { font-weight:700; color:var(--white); font-size:.85em; line-height:1.3; }
+.ath-name.loaned { color:var(--orange); }
+.ath-club   { font-size:.72em; color:var(--muted); margin-top:1px; }
+.ath-sponsor{ font-size:.7em; color:var(--amber); margin-top:1px; }
 .ptype-badge { display:inline-block; padding:0px 4px; border-radius:3px; font-size:.65em; font-weight:700; margin-left:3px; vertical-align:middle; }
 .ptype-AO { background:rgba(255,214,0,0.18); color:var(--gold); }
 .ptype-A  { background:rgba(0,200,224,0.18); color:var(--cyan); }
 .ptype-O  { background:rgba(0,230,118,0.18); color:var(--green); }
-@keyframes flashNew { 0%{background:rgba(0,230,118,0.25);} 100%{background:transparent;} }
-.row-new { animation:flashNew 1.5s ease-out forwards; }
+.loaned-pos { color:var(--orange); font-size:.72em; font-weight:700; font-family:'IBM Plex Mono',monospace; }
+.virtual-badge { display:inline-block; background:var(--orange); color:white; padding:2px 8px; border-radius:4px; font-size:.65em; font-weight:700; margin-left:8px; vertical-align:middle; }
+.fish-chips { display:flex; flex-wrap:wrap; gap:3px; margin-top:4px; }
+.fish-chip  { display:inline-flex; align-items:center; height:20px; padding:2px 7px; border-radius:10px; font-size:11px; font-weight:600; background:#1a3a5c; border:1px solid rgba(0,200,224,0.3); color:#90caf9; font-family:'IBM Plex Mono',monospace; flex:0 0 auto; }
+.fish-chip.max { background:var(--orange); border-color:var(--orange); color:white; font-weight:700; }
+.overall-table-wrap { overflow-x:auto; }
+.overall-table-wrap .rtable { min-width:360px; }
 
-/* TOAST */
-.toast {
-  position:fixed; bottom:24px; left:50%;
-  transform:translateX(-50%) translateY(20px);
-  background:var(--navy2); border:1px solid var(--cyan);
-  color:var(--white); padding:10px 22px;
-  border-radius:99px; font-size:.88em; font-weight:600;
-  z-index:9999; opacity:0; transition:all .3s;
-  pointer-events:none; white-space:nowrap;
-}
+/* ── TEAM COUNTING/DROPPED ─────────────────────────────── */
+.team-members { display:flex; flex-wrap:wrap; gap:4px; margin-top:4px; }
+.member-chip { display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border-radius:8px; font-size:.7em; font-weight:600; background:rgba(0,200,224,0.1); border:1px solid var(--border); color:var(--white); }
+.member-chip.dropped { background:rgba(255,23,68,0.1); border-color:rgba(255,23,68,0.3); color:var(--muted); text-decoration:line-through; opacity:.6; }
+.member-rank { font-family:'IBM Plex Mono',monospace; color:var(--cyan); }
+
+/* ── CHAMPIONSHIP ───────────────────────────────────────── */
+.champ-banner { background:linear-gradient(135deg,rgba(255,214,0,.08),rgba(255,143,0,.06)); border:1px solid rgba(255,214,0,.25); border-radius:10px; padding:12px 16px; margin-bottom:12px; }
+
+/* ── TOAST ──────────────────────────────────────────────── */
+.toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--navy2); border:1px solid var(--cyan); color:var(--white); padding:10px 22px; border-radius:99px; font-size:.88em; font-weight:600; z-index:9999; opacity:0; transition:all .3s; pointer-events:none; white-space:nowrap; }
 .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+/* ── MISC ───────────────────────────────────────────────── */
 .footer { text-align:center; font-size:.7em; color:var(--muted); opacity:.4; margin-top:20px; }
-.no-races-btn { padding:14px 28px; background:linear-gradient(135deg,var(--blue),var(--cyan)); color:white; border:none; border-radius:12px; font-family:'IBM Plex Sans',sans-serif; font-size:1em; font-weight:700; cursor:pointer; }
 .refresh-btn { background:rgba(0,200,224,.12); border:1px solid rgba(0,200,224,.3); color:var(--cyan); border-radius:6px; padding:4px 12px; font-size:.78em; cursor:pointer; }
-.virtual-badge { display:inline-block; background:var(--orange); color:white; padding:2px 8px; border-radius:4px; font-size:.65em; font-weight:700; margin-left:8px; vertical-align:middle; letter-spacing:.5px; }
-.loaned-name { color:var(--orange); }
-.loaned-pos  { color:var(--orange); font-size:.72em; font-weight:700; font-family:'IBM Plex Mono',monospace; }
+.no-results-btn { padding:14px 28px; background:linear-gradient(135deg,var(--blue),var(--cyan)); color:white; border:none; border-radius:12px; font-family:'IBM Plex Sans',sans-serif; font-size:1em; font-weight:700; cursor:pointer; }
 </style>
 </head>
 <body>
@@ -224,10 +227,11 @@ body { font-family:'IBM Plex Sans',sans-serif; background:var(--navy); color:var
 
 <!-- NAV TABS -->
 <div class="nav-tabs" id="navTabs" style="display:none;">
-  <button class="nav-tab active" id="tab-draw"         onclick="showView('draw')">🎯 Κλήρωση</button>
-  <button class="nav-tab"        id="tab-live"         onclick="showView('live')">📡 Live</button>
-  <button class="nav-tab"        id="tab-individual"   onclick="showView('individual')">🥇 Ατομική</button>
-  <button class="nav-tab"        id="tab-team"         onclick="showView('team')">🏅 Ομαδική</button>
+  <button class="nav-tab active"   id="tab-draw"         onclick="showView('draw')">🎯 Κλήρωση</button>
+  <button class="nav-tab"          id="tab-live"         onclick="showView('live')">📡 Live</button>
+  <button class="nav-tab"          id="tab-individual"   onclick="showView('individual')">🥇 Ατομική</button>
+  <button class="nav-tab"          id="tab-team"         onclick="showView('team')">🏅 Ομαδική</button>
+  <button class="nav-tab"          id="tab-final"        onclick="showView('final')">📋 Τελική</button>
   <button class="nav-tab gold-tab" id="tab-championship" onclick="showView('championship')">🏆 Πρωτ/μα</button>
 </div>
 
@@ -242,9 +246,10 @@ body { font-family:'IBM Plex Sans',sans-serif; background:var(--navy); color:var
 <div class="toast" id="toast"></div>
 
 <script>
-// ============================================
+'use strict';
+// ============================================================
 // CONFIG
-// ============================================
+// ============================================================
 const SUPABASE_URL = 'https://lnknyxaozoyxxiqqaswi.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxua255eGFvem95eHhpcXFhc3dpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzOTMxMTYsImV4cCI6MjA4OTk2OTExNn0.MA86SoUGaPsaIxzEvLNnx9oCoewqTG0ivUEVTN9jAwQ';
 const HDR = {
@@ -252,101 +257,64 @@ const HDR = {
   'Authorization': `Bearer ${SUPABASE_KEY}`,
   'Content-Type':  'application/json'
 };
-const POLL_INTERVAL = 20000; // 20 δευτερόλεπτα
+const POLL_INTERVAL = 30000; // 30 δευτερόλεπτα
 
-// ============================================
-// STATE
-// ============================================
+// ============================================================
+// STATE  (pure display — zero calculation)
+// ============================================================
 let races        = [];
-let currentRace  = null;
-let measurements = [];
-let athletes     = [];   // enriched με catches από measurements
-let atomikoSectors = []; // enriched atomiko sectors με ranks
-let omadikoSectors = []; // enriched omadiko sectors με ranks
+let currentRace  = null;   // από races table
+let raceResults  = null;   // από race_results table
+let measProgress = { done: 0, total: 0 }; // μόνο για progress bar
+let champData    = null;
 let currentView  = 'draw';
 let currentSector= null;
 let pollingTimer = null;
-let champData    = null;
 
-// ============================================
+// ============================================================
 // INIT
-// ============================================
+// ============================================================
 async function init() {
-  const params   = new URLSearchParams(window.location.search);
-  const raceUid  = params.get('race');
-  const champId  = params.get('champ');
+  const params  = new URLSearchParams(window.location.search);
+  const raceUid = params.get('race');
+  const champId = params.get('champ');
 
-  if (raceUid) {
-    // Θεατής αγώνα — φόρτωσε μόνο αυτόν τον αγώνα
-    await loadRaceByUid(raceUid);
-  } else if (champId) {
-    // Θεατής πρωταθλήματος — φόρτωσε πρώτο αγώνα του championship
-    await loadRaceByChamp(champId);
-  } else {
-    // Αλυτάρχης — dropdown με όλους τους αγώνες
-    await loadRaces();
-  }
+  if (raceUid)      await loadRaceByUid(raceUid);
+  else if (champId) await loadRaceByChamp(champId);
+  else              await loadRaces();
 }
 
-async function loadRaceByChamp(champId) {
+async function loadRaceByUid(uid) {
   showLoading();
   try {
-    // Φόρτωσε τον τελευταίο αγώνα του πρωταθλήματος
-    const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/races?championship_id=eq.${encodeURIComponent(champId)}&is_active=eq.true&order=round_number.desc&limit=10`,
-      { headers: HDR }
-    );
-    if (!res.ok) throw new Error(await res.text());
+    const res  = await sbFetch(`races?race_uid=eq.${enc(uid)}&is_active=eq.true&limit=1`);
     const rows = await res.json();
-    if (!rows.length) {
-      showError('Το πρωτάθλημα δεν βρέθηκε ή δεν έχει ενεργούς αγώνες.<br><small>Ελέγξτε το link που σας δόθηκε.</small>');
-      return;
-    }
+    if (!rows.length) { showError('Ο αγώνας δεν βρέθηκε ή δεν είναι ενεργός.<br><small>Ελέγξτε το link.</small>'); return; }
     races = rows;
-    // Εμφάνιση dropdown μόνο αν υπάρχουν πολλαπλοί αγώνες
-    if (rows.length > 1) {
-      populateDropdown();
-    } else {
-      document.getElementById('raceSelectorWrap').style.display = 'none';
-    }
-    // Επιλογή πρώτου (τελευταίου round)
-    await selectRace(rows[0].id);
-    // Αυτόματα στο tab Πρωτάθλημα
-    showView('championship');
-  } catch(e) { showError(e.message); }
-}
-
-async function loadRaceByUid(raceUid) {
-  showLoading();
-  try {
-    const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/races?race_uid=eq.${encodeURIComponent(raceUid)}&is_active=eq.true&limit=1`,
-      { headers: HDR }
-    );
-    if (!res.ok) throw new Error(await res.text());
-    const rows = await res.json();
-    if (!rows.length) {
-      showError('Ο αγώνας δεν βρέθηκε ή δεν είναι ενεργός.<br><small>Ελέγξτε το link που σας δόθηκε.</small>');
-      return;
-    }
-    races = rows;
-    // Χωρίς dropdown — απευθείας στον αγώνα
     document.getElementById('raceSelectorWrap').style.display = 'none';
     await selectRace(rows[0].id);
   } catch(e) { showError(e.message); }
 }
 
-// ============================================
-// LOAD RACES
-// ============================================
+async function loadRaceByChamp(champId) {
+  showLoading();
+  try {
+    const res  = await sbFetch(`races?championship_id=eq.${enc(champId)}&is_active=eq.true&order=round_number.desc&limit=10`);
+    const rows = await res.json();
+    if (!rows.length) { showError('Το πρωτάθλημα δεν βρέθηκε ή δεν έχει ενεργούς αγώνες.<br><small>Ελέγξτε το link.</small>'); return; }
+    races = rows;
+    if (rows.length > 1) populateDropdown();
+    else document.getElementById('raceSelectorWrap').style.display = 'none';
+    // Ορίζουμε το tab ΠΡΙΝ το selectRace ώστε να μη χαθεί σε επανεκκίνηση
+    currentView = 'championship';
+    await selectRace(rows[0].id);
+  } catch(e) { showError(e.message); }
+}
+
 async function loadRaces() {
   showLoading();
   try {
-    const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/races?is_active=eq.true&order=created_at.desc&limit=50`,
-      { headers: HDR }
-    );
-    if (!res.ok) throw new Error(await res.text());
+    const res  = await sbFetch('races?is_active=eq.true&order=created_at.desc&limit=50');
     races = await res.json();
     if (!races.length) { showNoRaces(); return; }
     populateDropdown();
@@ -378,15 +346,15 @@ async function selectRace(id) {
   if (!currentRace) return;
   document.getElementById('raceSelect').value = id;
   updateRaceMeta();
-  document.getElementById('navTabs').style.display = 'flex';
+  document.getElementById('navTabs').style.display  = 'flex';
   document.getElementById('livePill').style.display = 'flex';
-  await loadMeasurements();
+  await loadData();
   showView(currentView);
   startPolling();
 }
 
 function updateRaceMeta() {
-  const r = currentRace;
+  const r  = currentRace;
   const gt = r.game_type === 'float' ? '🎣 Float/Match' : '🎯 Casting';
   const rm = r.rank_mode || 'split';
   const rmLabel = rm === 'unified' ? 'Ενιαία' : rm === 'separate' ? 'Separate' : 'Split';
@@ -395,390 +363,44 @@ function updateRaceMeta() {
     <span class="meta-chip">📅 ${r.race_date||'—'}</span>
     <span class="meta-chip">📍 ${r.race_location||'—'}</span>
     <span class="meta-chip">Αγ. ${r.round_number}</span>
-    <span class="meta-chip">${rmLabel} · drop ${r.drop_worst??1}</span>
-  `;
+    <span class="meta-chip">${rmLabel} · drop ${r.drop_worst??1}</span>`;
 }
 
-// ============================================
-// LOAD MEASUREMENTS
-// ============================================
-async function loadMeasurements() {
+// ============================================================
+// DATA LOADING  —  race_results + measurement progress
+// ============================================================
+async function loadData() {
+  await Promise.all([ loadRaceResults(), loadMeasProgress() ]);
+}
+
+async function loadRaceResults() {
   try {
-    const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/measurements?race_id=eq.${currentRace.id}&completed=eq.true`,
-      { headers: HDR }
-    );
-    if (!res.ok) throw new Error(await res.text());
-    measurements = await res.json();
-    buildAthletes();
-    buildSectorData();
-  } catch(e) {
-    console.error('Measurements error:', e);
-  }
+    const res  = await sbFetch(`race_results?race_id=eq.${currentRace.id}&limit=1`);
+    const rows = await res.json();
+    raceResults = rows.length ? rows[0] : null;
+  } catch(e) { console.error('race_results error:', e); raceResults = null; }
 }
 
-// ============================================
-// BUILD ATHLETES — συγχώνευση κλήρωση + μετρήσεις
-// ============================================
-function buildAthletes() {
-  const isFloat = currentRace.game_type === 'float';
-
-  // Ξεκινάμε από την κλήρωση
-  athletes = (currentRace.athletes || []).map(a => ({
-    ...a,
-    participationType: a.participationType || (a.omadiko ? 'AO' : 'A'),
-    catches: [],
-    totalWeight: 0,
-    maxFish: 0,
-    status: a.status || 'normal'
-  }));
-
-  // Εισάγουμε δεδομένα από measurements
-  measurements.forEach(m => {
-    (m.athletes || []).forEach(ma => {
-      const real = athletes.find(a =>
-        (ma.id != null && String(a.id) === String(ma.id)) ||
-        (String(a.lastname||'').toUpperCase() === String(ma.lastname||'').toUpperCase() &&
-         String(a.firstname||'').toUpperCase() === String(ma.firstname||'').toUpperCase())
-      );
-      if (!real) return;
-
-      if (isFloat) {
-        real.totalWeight = (real.totalWeight || 0) + Number(ma.totalWeight || 0);
-        if (Number(ma.maxFish || 0) > Number(real.maxFish || 0)) real.maxFish = Number(ma.maxFish || 0);
-        // catches[0] = totalWeight, catches[1] = maxFish (για score engine)
-        real.catches = [real.totalWeight, real.maxFish];
-      } else {
-        const fish = Array.isArray(ma.fish) ? ma.fish : [];
-        real.catches = [...(real.catches || []), ...fish];
-      }
-      if (ma.status && ma.status !== 'normal' && ma.status !== 'signed') {
-        real.status = ma.status;
-      }
-    });
-  });
+async function loadMeasProgress() {
+  try {
+    const res   = await sbFetch(`measurements?race_id=eq.${currentRace.id}&completed=eq.true&select=sector`);
+    const rows  = await res.json();
+    const sectorCount = (currentRace.sectors || []).length;
+    const isFloat = currentRace.game_type === 'float';
+    measProgress = {
+      done:  rows.length,
+      total: isFloat ? sectorCount : sectorCount * (currentRace.pegs_per_sector || 5)
+    };
+  } catch(e) { console.error('meas progress error:', e); }
 }
 
-// ============================================
-// BUILD SECTOR DATA — enriched από atomiko/omadiko_sectors
-// ============================================
-function enrichAthlete(a) {
-  const real = athletes.find(r => String(r.id) === String(a.id));
-  return {
-    ...a,
-    catches:  real?.catches  || [],
-    status:   real?.status   || 'normal'
-  };
-}
-
-function buildSectorData() {
-  const pegsPerSector = getPegsPerSector();
-  const penalty = pegsPerSector + 1;
-
-  function calcRanks(sectors) {
-    sectors.forEach(sec => {
-      const all = [...sec.athletes, ...sec.loanedIn];
-      const normal = all.filter(a => ['normal','equipment','signed'].includes(a.status));
-      const penaltyList = all.filter(a => ['absent','disqualified'].includes(a.status));
-      const scored = normal.map(a => ({ a, ...scoreAthlete(a) }));
-      scored.sort((x, y) => sortScore(x, y));
-      assignRanks(scored);
-      scored.forEach(e => { e.a._rank = e.rank; });
-      penaltyList.forEach(a => { a._rank = penalty; });
-    });
-  }
-
-  atomikoSectors = (currentRace?.atomiko_sectors || []).map(sec => ({
-    ...sec,
-    athletes: sec.athletes.map(a => enrichAthlete(a)),
-    loanedIn: (sec.loanedIn || []).map(a => enrichAthlete(a))
-  }));
-
-  // Guard: αν ο virtual τομέας του ατομικού έχει ήδη αρκετούς αθλητές → δεν είναι τεχνητός
-  const pegs = getPegsPerSector();
-  atomikoSectors.forEach(s => {
-    if (s.isVirtual && s.athletes.length >= pegs) {
-      s.isVirtual = false;
-      s.loanedIn  = [];
-    }
-  });
-
-  omadikoSectors = (currentRace?.omadiko_sectors || []).map(sec => ({
-    ...sec,
-    athletes: sec.athletes.map(a => enrichAthlete(a)),
-    loanedIn: (sec.loanedIn || []).map(a => enrichAthlete(a))
-  }));
-
-  calcRanks(atomikoSectors);
-  calcRanks(omadikoSectors);
-}
-
-// Κοινή ταξινόμηση σκορ (casting + float)
-function sortScore(x, y) {
-  if (Math.abs(y.total - x.total) > 0.001) return y.total - x.total;
-  if (!isFloat()) {
-    if ((y.fishCount||0) !== (x.fishCount||0)) return (y.fishCount||0) - (x.fishCount||0);
-    if ((y.maxFish||0)  !== (x.maxFish||0))   return (y.maxFish||0)  - (x.maxFish||0);
-    const s1 = x.sortedCatches||[], s2 = y.sortedCatches||[];
-    for (let i = 0; i < Math.max(s1.length, s2.length); i++) {
-      const d = (s2[i]||0) - (s1[i]||0); if (d !== 0) return d;
-    }
-  }
-  return 0;
-}
-
-// ============================================
-// SCORE ENGINE
-// ============================================
-
-function getRaceMode()      { return currentRace?.rank_mode || 'split'; }
-function isFloat()          { return currentRace?.game_type === 'float'; }
-function getPegsPerSector() { return currentRace?.pegs_per_sector || 5; }
-function getDropWorst()     { return currentRace?.drop_worst ?? 1; }
-function getSectors()       { return currentRace?.sectors || []; }
-
-function isOmadiko(a) {
-  const t = a.participationType || (a.omadiko ? 'AO' : 'A');
-  return t === 'AO' || t === 'O';
-}
-function isAtomikos(a) {
-  const t = a.participationType || (a.omadiko ? 'AO' : 'A');
-  return t === 'AO' || t === 'A';
-}
-function hasOmadikoi() {
-  return athletes.some(a => isOmadiko(a));
-}
-function isTwoListMode() {
-  const rm = getRaceMode();
-  if (rm === 'unified') return false;
-  return hasOmadikoi();
-}
-function teamFilter(a) {
-  const rm = getRaceMode();
-  if (rm === 'separate') return isOmadiko(a);
-  if (rm === 'split')    return a.participationType === 'AO';
-  return isOmadiko(a);
-}
-
-// Score αθλητή — ίδια λογική με SFM
-function scoreAthlete(a) {
-  const catches = a.catches || [];
-  if (isFloat()) {
-    return { total: catches[0]||0, maxFish: catches[1]||0, fishCount:0, sortedCatches:[] };
-  } else {
-    const fishCount = catches.length;
-    const total = catches.reduce((s,c) => s+c, 0) + fishCount * 10;
-    const maxFish = fishCount > 0 ? Math.max(...catches) : 0;
-    const sortedCatches = [...catches].sort((a,b) => b-a);
-    return { total, maxFish, fishCount, sortedCatches };
-  }
-}
-
-// Ισοβαθμία check — ίδια με SFM
-function areTied(x, y) {
-  if (Math.abs(x.total - y.total) > 0.001) return false;
-  if (isFloat()) return true;
-  if ((x.fishCount||0) !== (y.fishCount||0)) return false;
-  if ((x.maxFish||0) !== (y.maxFish||0)) return false;
-  const sc1 = x.sortedCatches || [], sc2 = y.sortedCatches || [];
-  for (let i = 0; i < Math.max(sc1.length, sc2.length); i++) {
-    if ((sc1[i]||0) !== (sc2[i]||0)) return false;
-  }
-  return true;
-}
-
-// Assign ranks — ίδια με SFM (floor για score>0, ceil για score=0)
-function assignRanks(scored) {
-  let pos = 1, i = 0;
-  while (i < scored.length) {
-    let j = i;
-    while (j < scored.length && areTied(scored[j], scored[i])) j++;
-    const cnt = j - i;
-    const hasScore = scored[i].total > 0;
-    let rank;
-    if (cnt === 1) {
-      rank = pos;
-    } else {
-      let sum = 0; for (let k=0; k<cnt; k++) sum += pos+k;
-      rank = hasScore ? Math.floor(sum/cnt) : Math.ceil(sum/cnt);
-    }
-    for (let k=i; k<j; k++) scored[k].rank = rank;
-    pos += cnt; i = j;
-  }
-  return scored;
-}
-
-// ── ΚΑΤAΤΑΞΗ ΤΟΜΕΑ ───────────────────────────────────────────
-function calcSectorRankings() {
-  const pegsPerSector = getPegsPerSector();
-  const penalty = pegsPerSector + 1;
-  const twoList = isTwoListMode();
-
-  getSectors().forEach(sec => {
-    const sectorAthletes = athletes.filter(a => a.sector === sec.name);
-    const normal  = sectorAthletes.filter(a => ['normal','equipment','signed'].includes(a.status));
-    const penaltyA= sectorAthletes.filter(a => ['absent','disqualified'].includes(a.status));
-
-    // ΑΤΟΜΙΚΗ (A + AO)
-    const listAtomiki = twoList ? normal.filter(a => isAtomikos(a)) : normal;
-    const scoredAtomiki = listAtomiki.map(a => ({ a, ...scoreAthlete(a) }));
-    scoredAtomiki.sort((x,y) => {
-      if (Math.abs(y.total-x.total)>0.001) return y.total-x.total;
-      if (!isFloat()) {
-        if ((y.fishCount||0)!==(x.fishCount||0)) return (y.fishCount||0)-(x.fishCount||0);
-        if ((y.maxFish||0)!==(x.maxFish||0)) return (y.maxFish||0)-(x.maxFish||0);
-        const s1=x.sortedCatches||[], s2=y.sortedCatches||[];
-        for (let i=0;i<Math.max(s1.length,s2.length);i++){
-          const d=(s2[i]||0)-(s1[i]||0); if(d!==0) return d;
-        }
-      }
-      return 0;
-    });
-    assignRanks(scoredAtomiki);
-    scoredAtomiki.forEach(e => {
-      const real = athletes.find(a => String(a.id)===String(e.a.id));
-      if (real) real.sectorRank = real.status==='equipment' ? e.rank+1 : e.rank;
-    });
-
-    // Τύπος O → sectorRank = null
-    if (twoList) sectorAthletes.filter(a => !isAtomikos(a)).forEach(a => { a.sectorRank = null; });
-
-    // ΟΜΑΔΙΚΗ
-    const rm = getRaceMode();
-    if (rm === 'unified') {
-      sectorAthletes.forEach(a => { a.sectorRankTeam = a.sectorRank; });
-    } else if (twoList) {
-      const listTeam = normal.filter(a => teamFilter(a));
-      const scoredTeam = listTeam.map(a => ({ a, ...scoreAthlete(a) }));
-      scoredTeam.sort((x,y) => {
-        if (Math.abs(y.total-x.total)>0.001) return y.total-x.total;
-        if (!isFloat()) {
-          if ((y.fishCount||0)!==(x.fishCount||0)) return (y.fishCount||0)-(x.fishCount||0);
-          if ((y.maxFish||0)!==(x.maxFish||0)) return (y.maxFish||0)-(x.maxFish||0);
-        }
-        return 0;
-      });
-      assignRanks(scoredTeam);
-      scoredTeam.forEach(e => {
-        const real = athletes.find(a => String(a.id)===String(e.a.id));
-        if (real) real.sectorRankTeam = real.status==='equipment' ? e.rank+1 : e.rank;
-      });
-      sectorAthletes.filter(a => !teamFilter(a)).forEach(a => { a.sectorRankTeam = null; });
-    } else {
-      sectorAthletes.forEach(a => { a.sectorRankTeam = a.sectorRank; });
-    }
-
-    // Penalty ranks
-    penaltyA.forEach(a => {
-      if (!twoList || isAtomikos(a)) a.sectorRank = penalty;
-      if (teamFilter(a)) a.sectorRankTeam = penalty;
-    });
-  });
-}
-
-// ── ΤΕΛΙΚΗ ΑΤΟΜΙΚΗ ────────────────────────────────────────────
-function calcFinalIndividual() {
-  calcSectorRankings();
-  const twoList = isTwoListMode();
-  const ektosPenalty = getPegsPerSector() + 1;
-
-  // Αθλητές χωρίς τομέα → penalty
-  athletes.filter(a => !a.sector && (twoList ? isAtomikos(a) : true))
-          .forEach(a => { a.sectorRank = ektosPenalty; });
-
-  const list = athletes.filter(a => twoList ? isAtomikos(a) : true);
-  const scored = list.map(a => { const s=scoreAthlete(a); return {a, ...s}; });
-
-  scored.sort((x,y) => {
-    const rA=x.a.sectorRank||9999, rB=y.a.sectorRank||9999;
-    if (rA!==rB) return rA-rB;
-    if (Math.abs(y.total-x.total)>0.001) return y.total-x.total;
-    return (y.maxFish||0)-(x.maxFish||0);
-  });
-
-  let pos=1, i=0;
-  while (i<scored.length) {
-    let j=i;
-    while (j<scored.length &&
-      scored[j].a.sectorRank===scored[i].a.sectorRank &&
-      Math.abs(scored[j].total-scored[i].total)<0.001 &&
-      Math.abs((scored[j].maxFish||0)-(scored[i].maxFish||0))<0.001) j++;
-    const cnt=j-i;
-    let rank;
-    if (cnt===1) { rank=pos; } else {
-      let sum=0; for(let k=0;k<cnt;k++) sum+=pos+k;
-      rank = scored[i].total>0 ? Math.floor(sum/cnt) : Math.ceil(sum/cnt);
-    }
-    for (let k=i;k<j;k++) scored[k].a.finalRank = rank;
-    pos+=cnt; i=j;
-  }
-  return scored;
-}
-
-// ── ΟΜΑΔΙΚΗ ΚΑΤAΤΑΞΗ ─────────────────────────────────────────
-function calcTeamRanking() {
-  const twoList = isTwoListMode();
-  const rankField = twoList ? 'sectorRankTeam' : 'sectorRank';
-  const numSectors = getSectors().length;
-  const pegsPerSector = getPegsPerSector();
-  const dropWorst = getDropWorst();
-
-  function effectiveRank(a) {
-    return a[rankField] || pegsPerSector + 1;
-  }
-
-  const teamAthletes = athletes.filter(a => teamFilter(a) && a.sector);
-  if (!teamAthletes.length) return [];
-
-  const clubs = {};
-  teamAthletes.forEach(a => {
-    const club = a.club || '(Χωρίς Σύλλογο)';
-    if (!clubs[club]) clubs[club] = [];
-    clubs[club].push(a);
-  });
-
-  const teams = Object.entries(clubs).map(([club, members]) => {
-    const canParticipate = members.length === numSectors || members.length === numSectors - 1;
-    if (!canParticipate) return null;
-    const canDrop = members.length === numSectors;
-    const effectiveDrop = canDrop ? dropWorst : 0;
-
-    const sorted = [...members].sort((a,b) => {
-      const rA=effectiveRank(a), rB=effectiveRank(b);
-      if (rA!==rB) return rB-rA;
-      return scoreAthlete(a).total - scoreAthlete(b).total;
-    });
-
-    const dropped  = effectiveDrop > 0 ? sorted.slice(0, effectiveDrop) : [];
-    const counting = effectiveDrop > 0 ? sorted.slice(effectiveDrop)    : sorted;
-    const teamScore = counting.reduce((s,a) => s + effectiveRank(a), 0);
-    const teamTotal = counting.reduce((s,a) => s + scoreAthlete(a).total, 0);
-    return { club, members, counting, dropped, teamScore, teamTotal };
-  }).filter(t => t !== null);
-
-  teams.sort((a,b) => a.teamScore!==b.teamScore ? a.teamScore-b.teamScore : b.teamTotal-a.teamTotal);
-
-  let pos=1, i=0;
-  while (i<teams.length) {
-    let j=i;
-    while (j<teams.length &&
-      teams[j].teamScore===teams[i].teamScore &&
-      Math.abs(teams[j].teamTotal-teams[i].teamTotal)<0.001) j++;
-    const cnt=j-i;
-    const rank = cnt===1 ? pos : Math.floor((Array.from({length:cnt},(_,k)=>pos+k).reduce((a,b)=>a+b,0))/cnt);
-    for (let k=i;k<j;k++) teams[k].teamRank = rank;
-    pos+=cnt; i=j;
-  }
-  return teams;
-}
-
-// ============================================
+// ============================================================
 // POLLING
-// ============================================
+// ============================================================
 function startPolling() {
   stopPolling();
   pollingTimer = setInterval(async () => {
-    await loadMeasurements();
+    await loadData();
     refreshCurrentView();
   }, POLL_INTERVAL);
 }
@@ -786,15 +408,16 @@ function stopPolling() {
   if (pollingTimer) { clearInterval(pollingTimer); pollingTimer = null; }
 }
 function refreshCurrentView() {
-  buildSectorData();
-  if (currentView === 'live')       renderLive();
-  else if (currentView === 'individual') renderIndividual();
-  else if (currentView === 'team')  renderTeam();
+  if      (currentView === 'live')         renderLive();
+  else if (currentView === 'individual')   renderIndividual();
+  else if (currentView === 'team')         renderTeam();
+  else if (currentView === 'final')        renderFinal();
+  else if (currentView === 'championship') renderChampionship();
 }
 
-// ============================================
+// ============================================================
 // VIEWS
-// ============================================
+// ============================================================
 function showView(view) {
   if (view !== currentView) currentSector = null;
   currentView = view;
@@ -806,15 +429,20 @@ function showView(view) {
   else if (view === 'live')         renderLive();
   else if (view === 'individual')   renderIndividual();
   else if (view === 'team')         renderTeam();
+  else if (view === 'final')        renderFinal();
   else if (view === 'championship') renderChampionship();
 }
 
-// ── ΚΛΗΡΩΣΗ ──────────────────────────────────────────────────
+// ── ΚΛΗΡΩΣΗ ─────────────────────────────────────────────────
 function renderDraw() {
-  const main = document.getElementById('mainContent');
-  const sectors = getSectors();
-  const raceAthletes = currentRace.athletes || [];
-  if (!sectors.length) { main.innerHTML = `<div class="center-state"><div class="state-text">Δεν υπάρχουν τομείς στην κλήρωση.</div></div>`; return; }
+  const main    = document.getElementById('mainContent');
+  const sectors = currentRace.sectors || [];
+  const drawAthletes = currentRace.athletes || [];
+
+  if (!sectors.length) {
+    main.innerHTML = noDataHtml('Δεν υπάρχουν τομείς στην κλήρωση.');
+    return;
+  }
 
   let html = `<div>
     <div class="search-wrap">
@@ -824,27 +452,37 @@ function renderDraw() {
     </div>`;
 
   sectors.forEach(s => {
-    const sAthletes = raceAthletes.filter(a => a.sector === s.name).sort((a,b) => a.position - b.position);
+    const sAthletes = drawAthletes
+      .filter(a => a.sector === s.name)
+      .sort((a,b) => a.position - b.position);
+
     html += `<div class="sector-block" data-sector="${s.name}">
       <div class="sector-block-hdr">
         <span class="sector-block-title">ΤΟΜΕΑΣ ${s.name}</span>
         <span class="sector-block-sub">Θέσεις ${s.pegStart}–${s.pegEnd}</span>
       </div>
       <table class="draw-table">
-        <colgroup><col class="col-pos"><col class="col-athlete"><col class="col-club"></colgroup>
-        <thead><tr><th style="text-align:center">ΘΕΣΗ</th><th>ΑΘΛΗΤΗΣ</th><th>ΣΥΛΛΟΓΟΣ</th></tr></thead>
+        <colgroup><col class="col-pos"><col class="col-athlete"><col></colgroup>
+        <thead><tr>
+          <th style="text-align:center">ΘΕΣΗ</th>
+          <th>ΑΘΛΗΤΗΣ</th>
+          <th>ΣΥΛΛΟΓΟΣ</th>
+        </tr></thead>
         <tbody>`;
     sAthletes.forEach(a => {
       const pt = a.participationType || (a.omadiko ? 'AO' : 'A');
       html += `<tr class="draw-row" data-name="${(a.lastname+' '+a.firstname).toLowerCase()}">
         <td class="pos-cell">${a.position}</td>
-        <td><div class="athlete-name">${a.lastname} ${a.firstname}<span class="ptype-badge ptype-${pt}">${pt}</span></div>${a.sponsor?`<div class="ath-sponsor">🏷 ${a.sponsor}</div>`:''}</td>
-        <td class="club-cell">${a.club||'—'}</td>
+        <td>
+          <div class="ath-name">${a.lastname} ${a.firstname}<span class="ptype-badge ptype-${pt}">${pt}</span></div>
+          ${a.sponsor ? `<div class="ath-sponsor">🏷 ${a.sponsor}</div>` : ''}
+        </td>
+        <td class="draw-table td club-cell">${a.club||'—'}</td>
       </tr>`;
     });
     html += `</tbody></table></div>`;
   });
-  html += `<div class="footer">SFM Live v18 · Κλήρωση</div></div>`;
+  html += `<div class="footer">SFM Live v19 · Κλήρωση</div></div>`;
   main.innerHTML = html;
 }
 
@@ -856,413 +494,402 @@ function filterDraw(q) {
     row.classList.toggle('search-result-highlight', match && !!query);
   });
   document.querySelectorAll('.sector-block').forEach(block => {
-    if (!query) { block.style.display=''; return; }
+    if (!query) { block.style.display = ''; return; }
     const visible = block.querySelectorAll('.draw-row:not([style*="display: none"])').length;
     block.style.display = visible > 0 ? '' : 'none';
   });
 }
 
-// ── LIVE ─────────────────────────────────────────────────────
+// ── LIVE ────────────────────────────────────────────────────
 function renderLive() {
-  const main = document.getElementById('mainContent');
-  const sectors = getSectors();
-  const isFloatRace = isFloat();
-  const totalMeas = isFloatRace ? sectors.length : sectors.length * 10;
-  const doneMeas  = measurements.length;
-  const pct = totalMeas > 0 ? Math.round(doneMeas/totalMeas*100) : 0;
-
-  // Build sector data for display
-  calcSectorRankings();
+  const main    = document.getElementById('mainContent');
+  const isFloat = currentRace.game_type === 'float';
+  const pct     = measProgress.total > 0 ? Math.round(measProgress.done / measProgress.total * 100) : 0;
 
   let html = `<div>
+    ${pubBannerHtml(raceResults?.published_at)}
     <div class="progress-card">
       <div>
-        <div class="progress-nums">${doneMeas}/${totalMeas}</div>
+        <div class="progress-nums">${measProgress.done}/${measProgress.total}</div>
         <div class="progress-label">Καταμετρήσεις</div>
       </div>
       <div style="flex:1">
         <div class="pbar-wrap"><div class="pbar-fill" style="width:${pct}%"></div></div>
         <div style="font-size:.72em;color:var(--muted);margin-top:3px;">${pct}% ολοκληρώθηκε</div>
       </div>
-      <button class="refresh-btn" onclick="manualRefresh()">🔄</button>
     </div>`;
+
+  if (!raceResults || !raceResults.atomiko_sectors?.length) {
+    html += `<div class="center-state" style="min-height:30vh;">
+      <div class="state-icon">⏳</div>
+      <div class="state-text">Αναμονή για πρώτη δημοσίευση αποτελεσμάτων...</div>
+    </div>`;
+    html += `<div class="footer">SFM Live v19 · Live · Ανανέωση κάθε ${POLL_INTERVAL/1000}s</div></div>`;
+    main.innerHTML = html;
+    return;
+  }
 
   // Sector strip
+  const sectors = raceResults.atomiko_sectors;
   html += `<div class="sector-strip">
-    <div class="sector-chip ${!currentSector?'active':''}" onclick="selectSectorLive(null)">Όλοι</div>`;
-  sectors.forEach(s => {
-    const cnt = measurements.filter(m => m.sector===s.name).length;
-    const done = isFloatRace ? cnt>0 : cnt===10;
-    html += `<div class="sector-chip ${currentSector===s.name?'active':''}" onclick="selectSectorLive('${s.name}')">
-      ${s.name} ${done?'✅':''}
-    </div>`;
-  });
-  html += `</div>`;
+    <div class="sector-chip ${!currentSector?'active':''}" onclick="selectSector('live',null)">Όλοι</div>
+    ${sectors.map(s => `
+      <div class="sector-chip ${currentSector===s.name?'active':''}"
+           onclick="selectSector('live','${s.name}')">
+        ${s.name}${s.isVirtual?' 🔶':''}
+      </div>`).join('')}
+  </div>`;
 
-  // Tables per sector
-  const showSectors = currentSector ? sectors.filter(s=>s.sector===currentSector||s.name===currentSector) : sectors;
+  const showSectors = currentSector ? sectors.filter(s => s.name === currentSector) : sectors;
+
   showSectors.forEach(sec => {
-    const secAthletes = athletes.filter(a => a.sector===sec.name);
-    const twoList = isTwoListMode();
+    const all = [...(sec.athletes||[]), ...(sec.loanedIn||[])]
+      .sort((a,b) => (a.sectorRank||999) - (b.sectorRank||999));
 
     html += `<div class="results-card">
       <div class="results-card-hdr">
-        <span class="results-card-title">ΤΟΜΕΑΣ ${sec.name}</span>
-        <span class="done-badge">${measurements.filter(m=>m.sector===sec.name).length}${isFloatRace?'':'/10'} ✓</span>
-      </div>`;
+        <span class="results-card-title">ΤΟΜΕΑΣ ${sec.name}${sec.isVirtual?`<span class="virtual-badge">ΤΕΧΝΗΤΟΣ</span>`:''}</span>
+      </div>
+      <table class="rtable">
+        <thead><tr>
+          <th style="width:36px;">ΚΑΤ.</th>
+          <th style="width:40px;">ΘΕΣ.</th>
+          <th>ΑΘΛΗΤΗΣ</th>
+          ${isFloat
+            ? `<th style="text-align:right;width:80px;">ΒΑΡΟΣ</th>
+               <th style="text-align:right;width:70px;">MAX</th>`
+            : `<th style="text-align:center;width:32px;">🐟</th>
+               <th style="text-align:right;width:55px;">CM</th>
+               <th style="text-align:right;width:65px;">ΠΌΝΤΟΙ</th>`}
+        </tr></thead>
+        <tbody>`;
 
-    // Ατομική
-    const atomiki = secAthletes.filter(a => !twoList || isAtomikos(a))
-      .sort((a,b) => (a.sectorRank||999)-(b.sectorRank||999));
-    html += renderSectorTable(atomiki, '🎯 Ατομική', false);
+    all.forEach(a => {
+      const rank   = a.sectorRank;
+      const rkc    = rank===1?'rk1':rank===2?'rk2':rank===3?'rk3':'rko';
+      const medal  = rank && rank<=3 ? ['🥇','🥈','🥉'][rank-1] : (rank||'—');
+      const trCls  = a.isLoaned ? 'loaned-row' : (rank===1?'r1':rank===2?'r2':rank===3?'r3':'');
+      const nameStr= a.isLoaned ? `(${a.lastname} ${a.firstname})` : `${a.lastname} ${a.firstname}`;
+      const pt     = a.participationType || 'AO';
+      html += `<tr class="${trCls}">
+        <td class="rank-cell ${rkc}" style="text-align:center;">${medal}</td>
+        <td style="text-align:center;">${a.isLoaned
+          ? `<span class="loaned-pos">δαν.</span>`
+          : `<span style="font-size:.85em;font-family:'IBM Plex Mono',monospace;">${a.position||'—'}</span>`}
+        </td>
+        <td>
+          <div class="ath-name ${a.isLoaned?'loaned':''}">${nameStr}<span class="ptype-badge ptype-${pt}">${pt}</span></div>
+          <div class="ath-club">${a.club||''}</div>
+          ${buildFishChips(a, isFloat)}
+        </td>
+        ${buildScoreCols(a, isFloat)}
+      </tr>`;
+    });
 
-    // Ομαδική (αν υπάρχει)
-    if (twoList) {
-      const omadiki = secAthletes.filter(a => teamFilter(a))
-        .sort((a,b) => (a.sectorRankTeam||999)-(b.sectorRankTeam||999));
-      if (omadiki.length) html += renderSectorTable(omadiki, '🏅 Ομαδική', true);
-    }
-
-    html += `</div>`;
+    html += `</tbody></table></div>`;
   });
 
-  html += `<div class="footer">SFM Live v18 · Live · Ανανέωση κάθε ${POLL_INTERVAL/1000}s</div></div>`;
+  html += `<div class="footer">SFM Live v19 · Live · Ανανέωση κάθε ${POLL_INTERVAL/1000}s</div></div>`;
   main.innerHTML = html;
 }
 
-function renderSectorTable(list, title, isTeam) {
-  const isFloatRace = isFloat();
-  const rankField = isTeam ? 'sectorRankTeam' : 'sectorRank';
+// ── ΑΤΟΜΙΚΗ ΤΟΜΕΩΝ ──────────────────────────────────────────
+function renderIndividual() {
+  const main = document.getElementById('mainContent');
 
-  const sorted = [...list].sort((a,b) => (a.position||0)-(b.position||0));
+  if (!raceResults || !raceResults.atomiko_sectors?.length) {
+    main.innerHTML = noDataHtml('Δεν υπάρχουν δημοσιευμένα αποτελέσματα ατομικού.<br>Ο διοργανωτής δεν έχει κάνει Publish ακόμα.');
+    return;
+  }
 
-  const scoreTh = isFloatRace
-    ? `<th style="text-align:right;width:80px;">ΒΑΡΟΣ</th>
-       <th style="text-align:right;width:70px;">MAX</th>`
-    : `<th style="text-align:center;width:32px;">🐟</th>
-       <th style="text-align:right;width:55px;">Σ(cm)</th>
-       <th style="text-align:right;width:45px;">Π×10</th>
-       <th style="text-align:right;width:65px;">ΣΥΝΟΛΟ</th>`;
+  const sectors   = raceResults.atomiko_sectors;
+  const isFloat   = currentRace.game_type === 'float';
+  const pct       = measProgress.total > 0 ? Math.round(measProgress.done / measProgress.total * 100) : 0;
 
-  let html = `<div style="padding:0 0 4px;">
-    <div style="font-size:.72em;color:var(--muted);font-weight:700;letter-spacing:.8px;padding:8px 14px 4px;">${title}</div>
+  let html = `<div>
+    ${pubBannerHtml(raceResults.published_at)}
+    ${progressHtml(pct)}
+    <div class="sector-strip">
+      <div class="sector-chip ${!currentSector?'active':''}" onclick="selectSector('individual',null)">Όλοι</div>
+      ${sectors.map(s => `
+        <div class="sector-chip ${currentSector===s.name?'active':''}"
+             onclick="selectSector('individual','${s.name}')">
+          ${s.name}${s.isVirtual?' 🔶':''}
+        </div>`).join('')}
+    </div>`;
+
+  const showSectors = currentSector ? sectors.filter(s => s.name === currentSector) : sectors;
+
+  showSectors.forEach(sec => {
+    const all = [...(sec.athletes||[]), ...(sec.loanedIn||[])]
+      .sort((a,b) => (a.sectorRank||999) - (b.sectorRank||999));
+    const virtBadge = sec.isVirtual ? `<span class="virtual-badge">ΤΕΧΝΗΤΟΣ</span>` : '';
+
+    html += `<div class="results-card">
+      <div class="results-card-hdr">
+        <span class="results-card-title">ΤΟΜΕΑΣ ${sec.name}${virtBadge}</span>
+      </div>
+      <table class="rtable">
+        <thead><tr>
+          <th style="width:36px;">ΚΑΤ.</th>
+          <th style="width:40px;">ΘΕΣ.</th>
+          <th>ΑΘΛΗΤΗΣ</th>
+          ${isFloat
+            ? `<th style="text-align:right;width:80px;">ΒΑΡΟΣ</th>
+               <th style="text-align:right;width:70px;">MAX</th>`
+            : `<th style="text-align:center;width:32px;">🐟</th>
+               <th style="text-align:right;width:55px;">CM</th>
+               <th style="text-align:right;width:65px;">ΠΌΝΤΟΙ</th>`}
+        </tr></thead>
+        <tbody>`;
+
+    all.forEach(a => {
+      const rank = a.sectorRank;
+      const rkc  = rank===1?'rk1':rank===2?'rk2':rank===3?'rk3':'rko';
+      const medal = rank && rank<=3 ? ['🥇','🥈','🥉'][rank-1] : (rank||'—');
+      const trClass = a.isLoaned ? 'loaned-row' : (rank===1?'r1':rank===2?'r2':rank===3?'r3':'');
+      const nameStr = a.isLoaned ? `(${a.lastname} ${a.firstname})` : `${a.lastname} ${a.firstname}`;
+      const pt = a.participationType || 'AO';
+      html += `<tr class="${trClass}">
+        <td class="rank-cell ${rkc}" style="text-align:center;">${medal}</td>
+        <td style="text-align:center;">${a.isLoaned ? `<span class="loaned-pos">δαν.</span>` : `<span style="font-size:.85em;font-family:'IBM Plex Mono',monospace;">${a.position||'—'}</span>`}</td>
+        <td>
+          <div class="ath-name ${a.isLoaned?'loaned':''}">${nameStr}<span class="ptype-badge ptype-${pt}">${pt}</span></div>
+          <div class="ath-club">${a.club||''}</div>
+          ${buildFishChips(a, isFloat)}
+        </td>
+        ${buildScoreCols(a, isFloat)}
+      </tr>`;
+    });
+
+    html += `</tbody></table></div>`;
+  });
+
+  html += `<div class="footer">SFM Live v19 · Ατομική Τομέων · Ανανέωση κάθε ${POLL_INTERVAL/1000}s</div></div>`;
+  main.innerHTML = html;
+}
+
+// ── ΟΜΑΔΙΚΗ ΤΟΜΕΩΝ ──────────────────────────────────────────
+function renderTeam() {
+  const main = document.getElementById('mainContent');
+
+  // Αν δεν υπάρχουν omadiko_sectors → εμφάνισε μήνυμα
+  if (!raceResults || !raceResults.omadiko_sectors?.length) {
+    // Έλεγχος: αν δεν υπάρχει καθόλου ομαδική (unified mode)
+    if (raceResults && raceResults.atomiko_sectors?.length) {
+      main.innerHTML = noDataHtml('Δεν υπάρχει ξεχωριστή ομαδική κατάταξη.<br>(Unified mode — η ατομική ισχύει και για ομαδική)');
+    } else {
+      main.innerHTML = noDataHtml('Δεν υπάρχουν δημοσιευμένα αποτελέσματα ομαδικού.<br>Ο διοργανωτής δεν έχει κάνει Publish ακόμα.');
+    }
+    return;
+  }
+
+  const sectors  = raceResults.omadiko_sectors;
+  const isFloat  = currentRace.game_type === 'float';
+  const pct      = measProgress.total > 0 ? Math.round(measProgress.done / measProgress.total * 100) : 0;
+
+  let html = `<div>
+    ${pubBannerHtml(raceResults.published_at)}
+    ${progressHtml(pct)}
+    <div class="sector-strip">
+      <div class="sector-chip ${!currentSector?'active':''}" onclick="selectSector('team',null)">Όλοι</div>
+      ${sectors.map(s => `
+        <div class="sector-chip ${currentSector===s.name?'active':''}"
+             onclick="selectSector('team','${s.name}')">
+          ${s.name}${s.isVirtual?' 🔶':''}
+        </div>`).join('')}
+    </div>`;
+
+  const showSectors = currentSector ? sectors.filter(s => s.name === currentSector) : sectors;
+
+  showSectors.forEach(sec => {
+    const all = [...(sec.athletes||[]), ...(sec.loanedIn||[])]
+      .sort((a,b) => (a.sectorRankTeam||999) - (b.sectorRankTeam||999));
+    const virtBadge = sec.isVirtual ? `<span class="virtual-badge">ΤΕΧΝΗΤΟΣ</span>` : '';
+
+    html += `<div class="results-card">
+      <div class="results-card-hdr">
+        <span class="results-card-title">ΤΟΜΕΑΣ ${sec.name}${virtBadge}</span>
+      </div>
+      <table class="rtable">
+        <thead><tr>
+          <th style="width:36px;">ΚΑΤ.</th>
+          <th style="width:40px;">ΘΕΣ.</th>
+          <th>ΑΘΛΗΤΗΣ</th>
+          ${isFloat
+            ? `<th style="text-align:right;width:80px;">ΒΑΡΟΣ</th>
+               <th style="text-align:right;width:70px;">MAX</th>`
+            : `<th style="text-align:center;width:32px;">🐟</th>
+               <th style="text-align:right;width:55px;">CM</th>
+               <th style="text-align:right;width:65px;">ΠΌΝΤΟΙ</th>`}
+        </tr></thead>
+        <tbody>`;
+
+    all.forEach(a => {
+      const rank = a.sectorRankTeam;
+      const rkc  = rank===1?'rk1':rank===2?'rk2':rank===3?'rk3':'rko';
+      const medal = rank && rank<=3 ? ['🥇','🥈','🥉'][rank-1] : (rank||'—');
+      const trClass = a.isLoaned ? 'loaned-row' : (rank===1?'r1':rank===2?'r2':rank===3?'r3':'');
+      const nameStr = a.isLoaned ? `(${a.lastname} ${a.firstname})` : `${a.lastname} ${a.firstname}`;
+      const pt = a.participationType || 'AO';
+      html += `<tr class="${trClass}">
+        <td class="rank-cell ${rkc}" style="text-align:center;">${medal}</td>
+        <td style="text-align:center;">${a.isLoaned ? `<span class="loaned-pos">δαν.</span>` : `<span style="font-size:.85em;font-family:'IBM Plex Mono',monospace;">${a.position||'—'}</span>`}</td>
+        <td>
+          <div class="ath-name ${a.isLoaned?'loaned':''}">${nameStr}<span class="ptype-badge ptype-${pt}">${pt}</span></div>
+          <div class="ath-club">${a.club||''}</div>
+          ${buildFishChips(a, isFloat)}
+        </td>
+        ${buildScoreCols(a, isFloat)}
+      </tr>`;
+    });
+
+    html += `</tbody></table></div>`;
+  });
+
+  html += `<div class="footer">SFM Live v19 · Ομαδική Τομέων · Ανανέωση κάθε ${POLL_INTERVAL/1000}s</div></div>`;
+  main.innerHTML = html;
+}
+
+function selectSector(view, s) { currentSector = s; showView(view); }
+
+// ── ΤΕΛΙΚΗ ΚΑΤΑΤΑΞΗ ─────────────────────────────────────────
+function renderFinal() {
+  const main = document.getElementById('mainContent');
+
+  if (!raceResults) {
+    main.innerHTML = noDataHtml('Δεν υπάρχουν δημοσιευμένα αποτελέσματα.<br>Ο διοργανωτής δεν έχει κάνει Publish ακόμα.');
+    return;
+  }
+
+  const indiv  = raceResults.final_individual || [];
+  const teams  = raceResults.final_team || [];
+  const isFloat = currentRace.game_type === 'float';
+
+  let html = `<div>${pubBannerHtml(raceResults.published_at)}`;
+
+  // ── Τελική Ατομική ────────────────────────────────────────
+  html += `<div class="results-card" style="margin-bottom:14px;">
+    <div class="results-card-hdr">
+      <span class="results-card-title">ΤΕΛΙΚΗ ΑΤΟΜΙΚΗ ΚΑΤΑΤΑΞΗ</span>
+      <span class="done-badge">${indiv.length} αθλητές</span>
+    </div>
     <table class="rtable">
       <thead><tr>
-        <th style="width:36px;">ΘΕΣ.</th>
+        <th style="width:36px;">#</th>
         <th>ΑΘΛΗΤΗΣ</th>
-        ${scoreTh}
-        <th style="text-align:right;width:44px;">ΚΑΤΑΞ.</th>
+        <th style="text-align:center;width:50px;">ΚΑΤ.ΤΟΜ.</th>
+        ${isFloat
+          ? `<th style="text-align:right;width:80px;">ΒΑΡΟΣ</th>`
+          : `<th style="text-align:right;width:65px;">ΠΌΝΤΟΙ</th>`}
       </tr></thead>
       <tbody>`;
 
-  sorted.forEach(a => {
-    const rank = a[rankField];
-    const isLeader = rank === 1 && (a.catches||[]).length > 0;
-    const sc = scoreAthlete(a);
+  indiv.forEach(a => {
+    const rank = a.finalRank;
+    const rkc  = rank===1?'rk1':rank===2?'rk2':rank===3?'rk3':'rko';
+    const medal = rank && rank<=3 ? ['🥇','🥈','🥉'][rank-1] : (rank||'—');
+    const trCls = rank===1?'r1':rank===2?'r2':rank===3?'r3':'';
     const pt = a.participationType || 'AO';
-    const pos = a.position || '—';
-    const trClass = isLeader ? 'leader' : '';
-
-    let dataCols = '';
-    let chipsHtml = '';
-    if (isFloatRace) {
-      const w  = sc.total   > 0 ? `${sc.total} <span class="score-unit">gr</span>`   : '—';
-      const mx = sc.maxFish > 0 ? `${sc.maxFish} <span class="score-unit">gr</span>` : '—';
-      dataCols = `
-        <td class="sub-score" style="text-align:right;">${w}</td>
-        <td class="sub-score" style="text-align:right;">${mx}</td>`;
-    } else {
-      const catches  = a.catches || [];
-      const maxVal   = sc.maxFish;
-      const totalCm  = sc.sortedCatches.reduce((s,c)=>s+c,0);
-      const p10      = sc.fishCount * 10;
-      if (sc.fishCount > 0) {
-        chipsHtml = `<div class="fish-chips">${catches.map(cm=>`<span class="fish-chip${cm===maxVal?' max':''}">${cm}cm</span>`).join('')}</div>`;
-      }
-      dataCols = `
-        <td class="sub-score" style="text-align:center;">${sc.fishCount>0?sc.fishCount:'—'}</td>
-        <td class="sub-score" style="text-align:right;">${totalCm>0?totalCm+'cm':'—'}</td>
-        <td class="sub-score" style="text-align:right;">${p10>0?p10:'—'}</td>
-        <td class="score-val" style="font-size:.85em;">${sc.total>0?'<span style="color:var(--cyan);font-weight:700;">'+sc.total+'</span> <span class="score-unit">pts</span>':'—'}</td>`;
-    }
-
-    html += `<tr class="${trClass}">
-      <td class="sub-score" style="text-align:center;font-weight:700;">${pos}</td>
+    html += `<tr class="${trCls}">
+      <td class="rank-cell ${rkc}" style="text-align:center;">${medal}</td>
       <td>
         <div class="ath-name">${a.lastname} ${a.firstname}<span class="ptype-badge ptype-${pt}">${pt}</span></div>
-        <div class="ath-club">${a.club||''}</div>
-        ${chipsHtml}
+        <div class="ath-club">${a.club||''} · Τομ. ${a.sector||'—'} · Θ.${a.position||'—'}</div>
       </td>
-      ${dataCols}
-      <td class="sub-score" style="text-align:right;${isLeader?'color:var(--gold);font-weight:700;':''}">${rank||'—'}</td>
+      <td class="sub-score" style="text-align:center;">${a.sectorRank||'—'}</td>
+      ${isFloat
+        ? `<td class="score-val">${a.score>0 ? `${a.score} <span class="score-unit">gr</span>` : '—'}</td>`
+        : `<td class="score-val">${a.score>0 ? `${a.score} <span class="score-unit">pts</span>` : '—'}</td>`}
     </tr>`;
   });
 
   html += `</tbody></table></div>`;
-  return html;
-}
 
-
-function selectSectorLive(s) {
-  currentSector = s;
-  renderLive();
-}
-
-async function manualRefresh() {
-  await loadMeasurements();
-  refreshCurrentView();
-  showToast('🔄 Ανανεώθηκε!');
-}
-
-// ── ΑΤΟΜΙΚΗ — per-sector από atomiko_sectors ─────────────────
-function renderIndividual() {
-  const main = document.getElementById('mainContent');
-  const isFloatRace = isFloat();
-
-  if (!atomikoSectors.length) {
-    main.innerHTML = `<div class="center-state"><div class="state-icon">⚠️</div><div class="state-text">Δεν υπάρχουν δεδομένα ατομικού. Κάντε publish την κλήρωση από το SFM.</div></div>`;
-    return;
-  }
-
-  const scoreTh = isFloatRace
-    ? `<th style="text-align:right;width:80px;">ΒΑΡΟΣ (gr)</th><th style="text-align:right;width:70px;">MAX (gr)</th>`
-    : `<th style="text-align:center;width:32px;">🐟</th><th style="text-align:right;width:50px;">CM</th><th style="text-align:right;width:45px;">MAX</th><th style="text-align:right;width:60px;color:var(--amber);">ΠΌΝΤΟΙ</th>`;
-
-  let html = `<div>`;
-
-  // Sector strip
-  html += `<div class="sector-strip">
-    <div class="sector-chip ${!currentSector?'active':''}" onclick="selectSectorAtomiko(null)">Όλοι</div>`;
-  atomikoSectors.forEach(s => {
-    html += `<div class="sector-chip ${currentSector===s.name?'active':''}" onclick="selectSectorAtomiko('${s.name}')">
-      ${s.name}${s.isVirtual?' 🔶':''}
-    </div>`;
-  });
-  html += `</div>`;
-
-  const showSectors = currentSector
-    ? atomikoSectors.filter(s => s.name === currentSector)
-    : atomikoSectors;
-
-  showSectors.forEach(sec => {
-    const all = [...sec.athletes, ...sec.loanedIn]
-      .sort((a, b) => (a._rank||999) - (b._rank||999));
-    const virtBadge = sec.isVirtual ? `<span class="virtual-badge">ΤΕΧΝΗΤΟΣ</span>` : '';
-    const doneCnt = measurements.filter(m => m.sector === sec.name).length;
-
+  // ── Τελική Ομαδική ────────────────────────────────────────
+  if (teams.length) {
     html += `<div class="results-card">
       <div class="results-card-hdr">
-        <span class="results-card-title">ΤΟΜΕΑΣ ${sec.name}${virtBadge}</span>
-        <span class="done-badge">${doneCnt}${isFloatRace?'':'/10'} ✓</span>
+        <span class="results-card-title">ΤΕΛΙΚΗ ΟΜΑΔΙΚΗ ΚΑΤΑΤΑΞΗ</span>
+        <span class="done-badge">${teams.length} σύλλογοι</span>
       </div>
       <table class="rtable">
         <thead><tr>
-          <th style="width:36px;">ΚΑΤ.</th>
-          <th style="width:44px;">ΘΕΣ.</th>
-          <th>ΑΘΛΗΤΗΣ</th>
-          <th style="width:120px;">ΣΥΛΛΟΓΟΣ</th>
-          <th style="text-align:center;width:44px;">ΤΥΠΟΣ</th>
-          ${scoreTh}
+          <th style="width:36px;">#</th>
+          <th>ΣΥΛΛΟΓΟΣ</th>
+          <th style="text-align:center;width:60px;">ΑΘΡ.ΘΕΣΕΩΝ</th>
+          <th style="text-align:right;width:65px;">ΣΥΝΟΛΟ</th>
         </tr></thead>
         <tbody>`;
 
-    all.forEach(a => {
-      const rank  = a._rank;
-      const rkc   = rank===1?'rk1':rank===2?'rk2':rank===3?'rk3':'rko';
-      const medal = rank<=3 ? ['🥇','🥈','🥉'][rank-1] : (rank||'—');
-      const sc    = scoreAthlete(a);
-      const pt    = a.participationType || 'AO';
-      const isLoaned = a.isLoaned;
-      const posCell  = isLoaned ? `<span class="loaned-pos">δαν.</span>` : `<span style="font-family:'IBM Plex Mono',monospace;font-size:.85em;">${a.position||'—'}</span>`;
-      const nameStr  = isLoaned ? `(${a.lastname} ${a.firstname})` : `${a.lastname} ${a.firstname}`;
-      const trStyle  = isLoaned ? 'background:rgba(255,107,43,.06);' : '';
+    teams.forEach(t => {
+      const rank = t.teamRank;
+      const rkc  = rank===1?'rk1':rank===2?'rk2':rank===3?'rk3':'rko';
+      const medal = rank && rank<=3 ? ['🥇','🥈','🥉'][rank-1] : (rank||'—');
+      const trCls = rank===1?'r1':rank===2?'r2':rank===3?'r3':'';
 
-      let dataCols = '';
-      let chipsHtml = '';
-      if (isFloatRace) {
-        const w  = sc.total   > 0 ? `${sc.total} <span class="score-unit">gr</span>`   : '—';
-        const mx = sc.maxFish > 0 ? `${sc.maxFish} <span class="score-unit">gr</span>` : '—';
-        dataCols = `<td class="sub-score" style="text-align:right;">${w}</td><td class="sub-score" style="text-align:right;">${mx}</td>`;
-      } else {
-        const fish = sc.fishCount;
-        const cm   = sc.sortedCatches.reduce((s,c)=>s+c,0);
-        const mx   = sc.maxFish;
-        const pts  = sc.total;
-        if (fish > 0) {
-          chipsHtml = `<div class="fish-chips">${(a.catches||[]).map(v=>`<span class="fish-chip${v===mx?' max':''}">${v}cm</span>`).join('')}</div>`;
-        }
-        dataCols = `
-          <td class="sub-score" style="text-align:center;">${fish||'—'}</td>
-          <td class="sub-score" style="text-align:right;">${cm||'—'}</td>
-          <td class="sub-score" style="text-align:right;">${mx||'—'}</td>
-          <td class="sub-score" style="text-align:right;color:var(--amber);font-weight:700;">${pts||'—'}</td>`;
-      }
+      const memberChips = [
+        ...(t.counting||[]).map(m =>
+          `<span class="member-chip">
+            ${m.lastname} <span class="member-rank">(${m.sectorRankTeam||'—'})</span>
+          </span>`),
+        ...(t.dropped||[]).map(m =>
+          `<span class="member-chip dropped">
+            ${m.lastname} <span class="member-rank">(${m.sectorRankTeam||'—'})</span>
+          </span>`)
+      ].join('');
 
-      html += `<tr style="${trStyle}">
+      html += `<tr class="${trCls}">
         <td class="rank-cell ${rkc}" style="text-align:center;">${medal}</td>
-        <td style="text-align:center;">${posCell}</td>
         <td>
-          <div class="ath-name ${isLoaned?'loaned-name':''}">${nameStr}</div>
-          ${chipsHtml}
+          <div class="ath-name">${t.club}</div>
+          <div class="team-members">${memberChips}</div>
         </td>
-        <td class="ath-club" style="font-size:.75em;">${a.club||'—'}</td>
-        <td style="text-align:center;"><span class="ptype-badge ptype-${pt}">${pt}</span></td>
-        ${dataCols}
+        <td class="score-val" style="text-align:center;">${t.teamScore}</td>
+        <td class="sub-score" style="text-align:right;">${t.teamTotal.toFixed(1)}</td>
       </tr>`;
     });
 
     html += `</tbody></table></div>`;
-  });
-
-  html += `<div class="footer">SFM Live v18 · Ατομική τομέων · Ανανέωση κάθε ${POLL_INTERVAL/1000}s</div></div>`;
-  main.innerHTML = html;
-}
-
-function selectSectorAtomiko(s) { currentSector = s; renderIndividual(); }
-
-// ── ΟΜΑΔΙΚΗ — per-sector από omadiko_sectors ─────────────────
-function renderTeam() {
-  const main = document.getElementById('mainContent');
-  const isFloatRace = isFloat();
-
-  if (!omadikoSectors.length) {
-    main.innerHTML = `<div class="center-state"><div class="state-icon">⚠️</div><div class="state-text">Δεν υπάρχουν δεδομένα ομαδικού. Κάντε publish την κλήρωση από το SFM.</div></div>`;
-    return;
   }
 
-  const scoreTh = isFloatRace
-    ? `<th style="text-align:right;width:80px;">ΒΑΡΟΣ (gr)</th><th style="text-align:right;width:70px;">MAX (gr)</th>`
-    : `<th style="text-align:center;width:32px;">🐟</th><th style="text-align:right;width:50px;">CM</th><th style="text-align:right;width:45px;">MAX</th><th style="text-align:right;width:60px;color:var(--amber);">ΠΌΝΤΟΙ</th>`;
-
-  let html = `<div>`;
-
-  // Sector strip
-  html += `<div class="sector-strip">
-    <div class="sector-chip ${!currentSector?'active':''}" onclick="selectSectorOmadiko(null)">Όλοι</div>`;
-  omadikoSectors.forEach(s => {
-    html += `<div class="sector-chip ${currentSector===s.name?'active':''}" onclick="selectSectorOmadiko('${s.name}')">
-      ${s.name}${s.isVirtual?' 🔶':''}
-    </div>`;
-  });
-  html += `</div>`;
-
-  const showSectors = currentSector
-    ? omadikoSectors.filter(s => s.name === currentSector)
-    : omadikoSectors;
-
-  showSectors.forEach(sec => {
-    const all = [...sec.athletes, ...sec.loanedIn]
-      .sort((a, b) => (a._rank||999) - (b._rank||999));
-    const virtBadge = sec.isVirtual ? `<span class="virtual-badge">ΤΕΧΝΗΤΟΣ</span>` : '';
-    const doneCnt = measurements.filter(m => m.sector === sec.name).length;
-
-    html += `<div class="results-card">
-      <div class="results-card-hdr">
-        <span class="results-card-title">ΤΟΜΕΑΣ ${sec.name}${virtBadge}</span>
-        <span class="done-badge">${doneCnt}${isFloatRace?'':'/10'} ✓</span>
-      </div>
-      <table class="rtable">
-        <thead><tr>
-          <th style="width:36px;">ΚΑΤ.</th>
-          <th style="width:44px;">ΘΕΣ.</th>
-          <th>ΑΘΛΗΤΗΣ</th>
-          <th style="width:120px;">ΣΥΛΛΟΓΟΣ</th>
-          <th style="text-align:center;width:44px;">ΤΥΠΟΣ</th>
-          ${scoreTh}
-        </tr></thead>
-        <tbody>`;
-
-    all.forEach(a => {
-      const rank  = a._rank;
-      const rkc   = rank===1?'rk1':rank===2?'rk2':rank===3?'rk3':'rko';
-      const medal = rank<=3 ? ['🥇','🥈','🥉'][rank-1] : (rank||'—');
-      const sc    = scoreAthlete(a);
-      const pt    = a.participationType || 'AO';
-      const isLoaned = a.isLoaned;
-      const posCell  = isLoaned ? `<span class="loaned-pos">δαν.</span>` : `<span style="font-family:'IBM Plex Mono',monospace;font-size:.85em;">${a.position||'—'}</span>`;
-      const nameStr  = isLoaned ? `(${a.lastname} ${a.firstname})` : `${a.lastname} ${a.firstname}`;
-      const trStyle  = isLoaned ? 'background:rgba(255,107,43,.06);' : '';
-
-      let dataCols = '';
-      let chipsHtml = '';
-      if (isFloatRace) {
-        const w  = sc.total   > 0 ? `${sc.total} <span class="score-unit">gr</span>`   : '—';
-        const mx = sc.maxFish > 0 ? `${sc.maxFish} <span class="score-unit">gr</span>` : '—';
-        dataCols = `<td class="sub-score" style="text-align:right;">${w}</td><td class="sub-score" style="text-align:right;">${mx}</td>`;
-      } else {
-        const fish = sc.fishCount;
-        const cm   = sc.sortedCatches.reduce((s,c)=>s+c,0);
-        const mx   = sc.maxFish;
-        const pts  = sc.total;
-        if (fish > 0) {
-          chipsHtml = `<div class="fish-chips">${(a.catches||[]).map(v=>`<span class="fish-chip${v===mx?' max':''}">${v}cm</span>`).join('')}</div>`;
-        }
-        dataCols = `
-          <td class="sub-score" style="text-align:center;">${fish||'—'}</td>
-          <td class="sub-score" style="text-align:right;">${cm||'—'}</td>
-          <td class="sub-score" style="text-align:right;">${mx||'—'}</td>
-          <td class="sub-score" style="text-align:right;color:var(--amber);font-weight:700;">${pts||'—'}</td>`;
-      }
-
-      html += `<tr style="${trStyle}">
-        <td class="rank-cell ${rkc}" style="text-align:center;">${medal}</td>
-        <td style="text-align:center;">${posCell}</td>
-        <td>
-          <div class="ath-name ${isLoaned?'loaned-name':''}">${nameStr}</div>
-          ${chipsHtml}
-        </td>
-        <td class="ath-club" style="font-size:.75em;">${a.club||'—'}</td>
-        <td style="text-align:center;"><span class="ptype-badge ptype-${pt}">${pt}</span></td>
-        ${dataCols}
-      </tr>`;
-    });
-
-    html += `</tbody></table></div>`;
-  });
-
-  html += `<div class="footer">SFM Live v18 · Ομαδική τομέων · Ανανέωση κάθε ${POLL_INTERVAL/1000}s</div></div>`;
+  html += `<div class="footer">SFM Live v19 · Τελική Κατάταξη · Ανανέωση κάθε ${POLL_INTERVAL/1000}s</div></div>`;
   main.innerHTML = html;
 }
 
-function selectSectorOmadiko(s) { currentSector = s; renderTeam(); }
-
-// ── ΠΡΩΤΑΘΛΗΜΑ ───────────────────────────────────────────────
+// ── ΠΡΩΤΑΘΛΗΜΑ ──────────────────────────────────────────────
 async function renderChampionship() {
-  const main = document.getElementById('mainContent');
-  const champId = currentRace?.championship_id;
+  const main     = document.getElementById('mainContent');
+  const champId  = currentRace?.championship_id;
   if (!champId) {
-    main.innerHTML = `<div class="center-state"><div class="state-text">⚠️ Αυτός ο αγώνας δεν ανήκει σε πρωτάθλημα.</div></div>`;
+    main.innerHTML = noDataHtml('Αυτός ο αγώνας δεν ανήκει σε πρωτάθλημα.');
     return;
   }
   main.innerHTML = `<div class="center-state"><div class="spinner"></div><div class="state-text">Φόρτωση πρωταθλήματος...</div></div>`;
   try {
-    const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/championship_results?championship_id=eq.${encodeURIComponent(champId)}&order=published_at.desc&limit=1`,
-      { headers: HDR }
-    );
-    if (!res.ok) throw new Error(await res.text());
+    const res  = await sbFetch(`championship_results?championship_id=eq.${enc(champId)}&order=published_at.desc&limit=1`);
     const rows = await res.json();
     if (!rows.length) {
-      main.innerHTML = `<div class="center-state"><div class="state-text">⚠️ Δεν υπάρχουν δημοσιευμένα αποτελέσματα πρωταθλήματος ακόμα.</div></div>`;
+      main.innerHTML = noDataHtml('Δεν υπάρχουν δημοσιευμένα αποτελέσματα πρωταθλήματος ακόμα.');
       return;
     }
     champData = rows[0];
     renderChampionshipData();
   } catch(e) {
-    main.innerHTML = `<div class="center-state"><div class="state-text">❌ ${e.message}</div></div>`;
+    main.innerHTML = noDataHtml('❌ ' + e.message);
   }
 }
 
 function renderChampionshipData() {
   const main = document.getElementById('mainContent');
-  const { championship_title, championship_code, rounds_done, published_at, individual=[], team=[] } = champData;
+  const { championship_title, rounds_done, published_at, individual=[], team=[] } = champData;
   const medals = {1:'🥇',2:'🥈',3:'🥉'};
   const pubDate = new Date(published_at).toLocaleString('el-GR');
   const numRaces = individual.length ? (individual[0].raceResults||[]).length : 0;
 
   const indivRows = individual.map(a => {
     const medal = medals[a.champRank] || a.champRank;
-    const rkc = a.champRank<=3?`rk${a.champRank}`:'rko';
+    const rkc   = a.champRank<=3?`rk${a.champRank}`:'rko';
     const raceCols = (a.raceResults||[]).map(r =>
       r && r.rank<900
         ? `<td class="sub-score" style="text-align:center;">${r.points}</td><td class="sub-score" style="text-align:center;color:var(--cyan);font-weight:700;">${r.rank}</td>`
@@ -1280,10 +907,10 @@ function renderChampionshipData() {
   const numRacesTeam = team.length ? (team[0].raceResults||[]).length : 0;
   const teamRows = team.map(t => {
     const medal = medals[t.rank] || t.rank;
-    const rkc = t.rank<=3?`rk${t.rank}`:'rko';
+    const rkc   = t.rank<=3?`rk${t.rank}`:'rko';
     const raceCols = (t.raceResults||[]).map(r =>
       r ? `<td class="sub-score" style="text-align:center;color:var(--cyan);">${r.dailyRank||'—'}</td><td class="sub-score" style="text-align:center;color:var(--amber);">${r.totalPenalty||'—'}</td>`
-        : `<td class="sub-score" style="text-align:center;color:var(--muted);">—</td><td class="sub-score">—</td>`
+        : `<td class="sub-score" style="text-align:center;">—</td><td class="sub-score">—</td>`
     ).join('');
     return `<tr class="${t.rank<=3?'r'+t.rank:''}">
       <td class="rank-cell ${rkc}">${medal}</td>
@@ -1295,10 +922,9 @@ function renderChampionshipData() {
   }).join('');
 
   main.innerHTML = `<div>
-    <div style="background:linear-gradient(135deg,rgba(255,214,0,.08),rgba(255,143,0,.06));border:1px solid rgba(255,214,0,.25);border-radius:10px;padding:12px 16px;margin-bottom:12px;">
+    <div class="champ-banner">
       <div style="font-size:.7em;color:var(--gold);font-weight:700;letter-spacing:1px;">🏆 ΠΡΩΤΑΘΛΗΜΑ</div>
       <div style="font-size:.95em;font-weight:700;">${championship_title||champData.championship_id}</div>
-      ${championship_code?`<div style="font-size:.7em;color:var(--muted);">${championship_code}</div>`:''}
       <div style="display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap;">
         <span class="meta-chip" style="background:rgba(255,214,0,.12);color:var(--gold);">📊 ${rounds_done} Αγωνιστικές</span>
         <span style="font-size:.7em;color:var(--muted);">Ενημ: ${pubDate}</span>
@@ -1317,9 +943,12 @@ function renderChampionshipData() {
               <th style="text-align:center;color:var(--green);">Σύνολο</th>
               <th style="text-align:center;color:var(--gold);">Βαθμός</th>
             </tr>
-            <tr><th colspan="2"></th>${Array.from({length:numRaces},()=>`<th style="text-align:center;font-size:.68em;color:var(--muted);">Πόντοι</th><th style="text-align:center;font-size:.68em;color:var(--muted);">Κατ.</th>`).join('')}<th></th><th></th></tr>
+            <tr><th colspan="2"></th>
+              ${Array.from({length:numRaces},()=>`<th style="text-align:center;font-size:.68em;color:var(--muted);">Πόντοι</th><th style="text-align:center;font-size:.68em;color:var(--muted);">Κατ.</th>`).join('')}
+              <th></th><th></th>
+            </tr>
           </thead>
-          <tbody>${indivRows||'<tr><td colspan="10" style="text-align:center;padding:18px;color:var(--muted);">Δεν υπάρχουν αποτελέσματα</td></tr>'}</tbody>
+          <tbody>${indivRows||emptyRow(10,'Δεν υπάρχουν αποτελέσματα')}</tbody>
         </table>
       </div>
     </div>
@@ -1336,17 +965,93 @@ function renderChampionshipData() {
               <th style="text-align:center;color:var(--amber);">Άθρ.Ποινών</th>
             </tr>
           </thead>
-          <tbody>${teamRows||'<tr><td colspan="8" style="text-align:center;padding:18px;color:var(--muted);">Δεν υπάρχουν αποτελέσματα</td></tr>'}</tbody>
+          <tbody>${teamRows||emptyRow(8,'Δεν υπάρχουν αποτελέσματα')}</tbody>
         </table>
       </div>
     </div>
-    <div class="footer">SFM Live v18 · Πρωτάθλημα</div>
+    <div class="footer">SFM Live v19 · Πρωτάθλημα</div>
   </div>`;
 }
 
-// ============================================
+// ============================================================
+// RENDER HELPERS
+// ============================================================
+function buildFishChips(a, isFloat) {
+  if (isFloat || !a.catches?.length) return '';
+  const max = a.maxFish || 0;
+  return `<div class="fish-chips">${a.catches.map(v =>
+    `<span class="fish-chip${v===max?' max':''}">${v}cm</span>`
+  ).join('')}</div>`;
+}
+
+function buildScoreCols(a, isFloat) {
+  if (isFloat) {
+    const w  = a.score   > 0 ? `${a.score} <span class="score-unit">gr</span>`   : '—';
+    const mx = a.maxFish > 0 ? `${a.maxFish} <span class="score-unit">gr</span>` : '—';
+    return `<td class="sub-score" style="text-align:right;">${w}</td>
+            <td class="sub-score" style="text-align:right;">${mx}</td>`;
+  } else {
+    const fish = a.catches?.length || 0;
+    const pts  = a.score || 0;
+    const cm   = a.catches?.reduce((s,v)=>s+v,0) || 0;
+    return `<td class="sub-score" style="text-align:center;">${fish||'—'}</td>
+            <td class="sub-score" style="text-align:right;">${cm||'—'}</td>
+            <td class="score-val" style="font-size:.82em;">${pts>0?`<span style="color:var(--amber);font-weight:700;">${pts}</span> <span class="score-unit">pts</span>`:'—'}</td>`;
+  }
+}
+
+function pubBannerHtml(publishedAt) {
+  if (!publishedAt) return '';
+  const dt = new Date(publishedAt).toLocaleString('el-GR');
+  return `<div class="pub-banner">
+    <span class="pub-label">📡 Τελευταία ενημέρωση:</span>
+    <span class="pub-time">${dt}</span>
+    <button class="refresh-btn" onclick="manualRefresh()">🔄</button>
+  </div>`;
+}
+
+function progressHtml(pct) {
+  return `<div class="progress-card">
+    <div>
+      <div class="progress-nums">${measProgress.done}/${measProgress.total}</div>
+      <div class="progress-label">Καταμετρήσεις</div>
+    </div>
+    <div style="flex:1">
+      <div class="pbar-wrap"><div class="pbar-fill" style="width:${pct}%"></div></div>
+      <div style="font-size:.72em;color:var(--muted);margin-top:3px;">${pct}% ολοκληρώθηκε</div>
+    </div>
+  </div>`;
+}
+
+async function manualRefresh() {
+  await loadData();
+  refreshCurrentView();
+  showToast('🔄 Ανανεώθηκε!');
+}
+
+function emptyRow(cols, msg) {
+  return `<tr><td colspan="${cols}" style="text-align:center;padding:18px;color:var(--muted);">${msg}</td></tr>`;
+}
+
+// ============================================================
+// SUPABASE HELPER
+// ============================================================
+function sbFetch(path, opts={}) {
+  return fetch(`${SUPABASE_URL}/rest/v1/${path}`, { headers: HDR, ...opts });
+}
+function enc(v) { return encodeURIComponent(v); }
+
+// ============================================================
 // UI HELPERS
-// ============================================
+// ============================================================
+function noDataHtml(msg) {
+  return `<div class="center-state">
+    <div class="state-icon">⏳</div>
+    <div class="state-title">Αναμονή</div>
+    <div class="state-text">${msg}</div>
+    <button class="no-results-btn" onclick="manualRefresh()">🔄 Ανανέωση</button>
+  </div>`;
+}
 function showLoading() {
   document.getElementById('mainContent').innerHTML = `<div class="center-state"><div class="spinner"></div><div class="state-text">Φόρτωση...</div></div>`;
 }
@@ -1354,8 +1059,8 @@ function showNoRaces() {
   document.getElementById('mainContent').innerHTML = `<div class="center-state">
     <div class="state-icon">🎣</div>
     <div class="state-title">Δεν υπάρχουν αγώνες</div>
-    <div class="state-text">Δεν βρέθηκαν ενεργοί αγώνες στη βάση.</div>
-    <button class="no-races-btn" onclick="loadRaces()">🔄 Δοκίμασε ξανά</button>
+    <div class="state-text">Δεν βρέθηκαν ενεργοί αγώνες.</div>
+    <button class="no-results-btn" onclick="loadRaces()">🔄 Δοκίμασε ξανά</button>
   </div>`;
 }
 function showError(msg) {
@@ -1363,7 +1068,7 @@ function showError(msg) {
     <div class="state-icon">⚠️</div>
     <div class="state-title">Σφάλμα</div>
     <div class="state-text">${msg}</div>
-    <button class="no-races-btn" onclick="loadRaces()">🔄 Δοκίμασε ξανά</button>
+    <button class="no-results-btn" onclick="loadRaces()">🔄 Δοκίμασε ξανά</button>
   </div>`;
 }
 function showToast(msg) {
@@ -1372,9 +1077,9 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove('show'), 2500);
 }
 
-// ============================================
+// ============================================================
 // START
-// ============================================
+// ============================================================
 init();
 </script>
 </body>
