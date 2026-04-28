@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>🐟 SFM Live v19</title>
+<title>🐟 SFM Live v20</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
 
@@ -466,6 +466,9 @@ function renderDraw() {
   const drawAthletes = currentRace.athletes || [];
 
   if (!sectors.length) {
+    main.innerHTML = noDataHtml('Δεν υπάρχουν τομείς ακόμα.');
+    return;
+  }
 
   let html = `<div>
     <div class="search-wrap">
@@ -505,7 +508,7 @@ function renderDraw() {
     });
     html += `</tbody></table></div>`;
   });
-  html += `<div class="footer">SFM Live v19 · Κλήρωση</div></div>`;
+  html += `<div class="footer">SFM Live v20 · Κλήρωση</div></div>`;
   main.innerHTML = html;
 }
 
@@ -526,6 +529,13 @@ function filterDraw(q) {
 // ── LIVE ────────────────────────────────────────────────────
 function renderLive() {
   const main    = document.getElementById('mainContent');
+
+  // v20: Χωρίς live κλήρωση → δεν εμφανίζονται αποτελέσματα
+  if (!currentRace.cinema_played_at) {
+    main.innerHTML = waitingDrawHtml();
+    return;
+  }
+
   const isFloat = currentRace.game_type === 'float';
   const pct     = measProgress.total > 0 ? Math.round(measProgress.done / measProgress.total * 100) : 0;
 
@@ -547,7 +557,7 @@ function renderLive() {
       <div class="state-icon">⏳</div>
       <div class="state-text">Αναμονή για πρώτη δημοσίευση αποτελεσμάτων...</div>
     </div>`;
-    html += `<div class="footer">SFM Live v19 · Live · Ανανέωση κάθε ${POLL_INTERVAL/1000}s</div></div>`;
+    html += `<div class="footer">SFM Live v20 · Live · Ανανέωση κάθε ${POLL_INTERVAL/1000}s</div></div>`;
     main.innerHTML = html;
     return;
   }
@@ -612,13 +622,19 @@ function renderLive() {
     html += `</tbody></table></div>`;
   });
 
-  html += `<div class="footer">SFM Live v19 · Live · Ανανέωση κάθε ${POLL_INTERVAL/1000}s</div></div>`;
+  html += `<div class="footer">SFM Live v20 · Live · Ανανέωση κάθε ${POLL_INTERVAL/1000}s</div></div>`;
   main.innerHTML = html;
 }
 
 // ── ΑΤΟΜΙΚΗ ΤΟΜΕΩΝ ──────────────────────────────────────────
 function renderIndividual() {
   const main = document.getElementById('mainContent');
+
+  // v20: Χωρίς live κλήρωση → δεν εμφανίζονται αποτελέσματα
+  if (!currentRace.cinema_played_at) {
+    main.innerHTML = waitingDrawHtml();
+    return;
+  }
 
   if (!raceResults || !raceResults.atomiko_sectors?.length) {
     main.innerHTML = noDataHtml('Δεν υπάρχουν δημοσιευμένα αποτελέσματα ατομικού.<br>Ο διοργανωτής δεν έχει κάνει Publish ακόμα.');
@@ -688,13 +704,19 @@ function renderIndividual() {
     html += `</tbody></table></div>`;
   });
 
-  html += `<div class="footer">SFM Live v19 · Ατομική Τομέων · Ανανέωση κάθε ${POLL_INTERVAL/1000}s</div></div>`;
+  html += `<div class="footer">SFM Live v20 · Ατομική Τομέων · Ανανέωση κάθε ${POLL_INTERVAL/1000}s</div></div>`;
   main.innerHTML = html;
 }
 
 // ── ΟΜΑΔΙΚΗ ΤΟΜΕΩΝ ──────────────────────────────────────────
 function renderTeam() {
   const main = document.getElementById('mainContent');
+
+  // v20: Χωρίς live κλήρωση → δεν εμφανίζονται αποτελέσματα
+  if (!currentRace.cinema_played_at) {
+    main.innerHTML = waitingDrawHtml();
+    return;
+  }
 
   // Αν δεν υπάρχουν omadiko_sectors → εμφάνισε μήνυμα
   if (!raceResults || !raceResults.omadiko_sectors?.length) {
@@ -770,7 +792,7 @@ function renderTeam() {
     html += `</tbody></table></div>`;
   });
 
-  html += `<div class="footer">SFM Live v19 · Ομαδική Τομέων · Ανανέωση κάθε ${POLL_INTERVAL/1000}s</div></div>`;
+  html += `<div class="footer">SFM Live v20 · Ομαδική Τομέων · Ανανέωση κάθε ${POLL_INTERVAL/1000}s</div></div>`;
   main.innerHTML = html;
 }
 
@@ -779,6 +801,12 @@ function selectSector(view, s) { currentSector = s; showView(view); }
 // ── ΤΕΛΙΚΗ ΚΑΤΑΤΑΞΗ ─────────────────────────────────────────
 function renderFinal() {
   const main = document.getElementById('mainContent');
+
+  // v20: Χωρίς live κλήρωση → δεν εμφανίζονται αποτελέσματα
+  if (!currentRace.cinema_played_at) {
+    main.innerHTML = waitingDrawHtml();
+    return;
+  }
 
   if (!raceResults) {
     main.innerHTML = noDataHtml('Δεν υπάρχουν δημοσιευμένα αποτελέσματα.<br>Ο διοργανωτής δεν έχει κάνει Publish ακόμα.');
@@ -876,7 +904,7 @@ function renderFinal() {
     html += `</tbody></table></div>`;
   }
 
-  html += `<div class="footer">SFM Live v19 · Τελική Κατάταξη · Ανανέωση κάθε ${POLL_INTERVAL/1000}s</div></div>`;
+  html += `<div class="footer">SFM Live v20 · Τελική Κατάταξη · Ανανέωση κάθε ${POLL_INTERVAL/1000}s</div></div>`;
   main.innerHTML = html;
 }
 
@@ -992,7 +1020,7 @@ function renderChampionshipData() {
         </table>
       </div>
     </div>
-    <div class="footer">SFM Live v19 · Πρωτάθλημα</div>
+    <div class="footer">SFM Live v20 · Πρωτάθλημα</div>
   </div>`;
 }
 
@@ -1072,6 +1100,18 @@ function noDataHtml(msg) {
     <div class="state-icon">⏳</div>
     <div class="state-title">Αναμονή</div>
     <div class="state-text">${msg}</div>
+    <button class="no-results-btn" onclick="manualRefresh()">🔄 Ανανέωση</button>
+  </div>`;
+}
+// v20: Όταν ο αγώνας δεν έχει παίξει live → έλεγχος cinema_played_at
+function waitingDrawHtml() {
+  return `<div class="center-state">
+    <div class="state-icon">🔒</div>
+    <div class="state-title">Περιμένετε τη Live Κλήρωση</div>
+    <div class="state-text">
+      Ο διοργανωτής δεν έχει ολοκληρώσει την παρουσίαση της κλήρωσης ακόμα.<br>
+      Όλα τα αποτελέσματα θα γίνουν ορατά αμέσως μετά.
+    </div>
     <button class="no-results-btn" onclick="manualRefresh()">🔄 Ανανέωση</button>
   </div>`;
 }
