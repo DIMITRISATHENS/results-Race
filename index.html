@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>🐟 SFM Live v19</title>
+<title>🐟 SFM Live v18</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
 
@@ -141,7 +141,7 @@ body { font-family:'IBM Plex Sans',sans-serif; background:var(--navy); color:var
 .sector-chip.active { background:var(--blue); border-color:var(--cyan); color:white; }
 
 /* RESULTS CARD */
-.results-card { background:var(--card); border:1px solid var(--border); border-radius:14px; overflow:visible; margin-bottom:14px; }
+.results-card { background:var(--card); border:1px solid var(--border); border-radius:14px; overflow:hidden; margin-bottom:14px; }
 .results-card-hdr { padding:10px 14px; background:rgba(0,200,224,0.06); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:8px; }
 .results-card-title { font-family:'Bebas Neue',sans-serif; font-size:1.05em; letter-spacing:2px; color:var(--cyan); }
 
@@ -171,8 +171,6 @@ body { font-family:'IBM Plex Sans',sans-serif; background:var(--navy); color:var
 .done-badge { color:var(--green); font-size:.75em; font-weight:700; }
 .overall-table-wrap { overflow-x:auto; }
 .overall-table-wrap .rtable { min-width:360px; }
-.table-scroll-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
-.table-scroll-wrap .rtable { min-width:420px; }
 .ath-name { font-weight:700; color:var(--white); font-size:.85em; line-height:1.3; }
 .ath-club { font-size:.72em; color:var(--muted); margin-top:1px; }
 .ath-sponsor { font-size:.7em; color:var(--amber); margin-top:1px; }
@@ -454,7 +452,7 @@ function buildAthletes() {
         const fish = Array.isArray(ma.fish) ? ma.fish : [];
         real.catches = [...(real.catches || []), ...fish];
       }
-      if (ma.status && ma.status !== 'normal' && ma.status !== 'signed' && ma.status !== 'resigned') {
+      if (ma.status && ma.status !== 'normal' && ma.status !== 'signed') {
         real.status = ma.status;
       }
     });
@@ -477,12 +475,10 @@ function buildSectorData() {
   const pegsPerSector = getPegsPerSector();
   const penalty = pegsPerSector + 1;
 
-  // excludeLoanedFromVirtual: true για ομαδική (δανεικοί δεν επηρεάζουν virtual τομέα)
-  function calcRanks(sectors, excludeLoanedFromVirtual = false) {
+  function calcRanks(sectors) {
     sectors.forEach(sec => {
-      const loanedForRank = (excludeLoanedFromVirtual && sec.isVirtual) ? [] : sec.loanedIn;
-      const all = [...sec.athletes, ...loanedForRank];
-      const normal = all.filter(a => ['normal','equipment','signed','resigned'].includes(a.status));
+      const all = [...sec.athletes, ...sec.loanedIn];
+      const normal = all.filter(a => ['normal','equipment','signed'].includes(a.status));
       const penaltyList = all.filter(a => ['absent','disqualified'].includes(a.status));
       const scored = normal.map(a => ({ a, ...scoreAthlete(a) }));
       scored.sort((x, y) => sortScore(x, y));
@@ -514,7 +510,7 @@ function buildSectorData() {
   }));
 
   calcRanks(atomikoSectors);
-  calcRanks(omadikoSectors, true); // δανεικοί εκτός virtual τομέα για ομαδική
+  calcRanks(omadikoSectors);
 }
 
 // Κοινή ταξινόμηση σκορ (casting + float)
@@ -620,7 +616,7 @@ function calcSectorRankings() {
 
   getSectors().forEach(sec => {
     const sectorAthletes = athletes.filter(a => a.sector === sec.name);
-    const normal  = sectorAthletes.filter(a => ['normal','equipment','signed','resigned'].includes(a.status));
+    const normal  = sectorAthletes.filter(a => ['normal','equipment','signed'].includes(a.status));
     const penaltyA= sectorAthletes.filter(a => ['absent','disqualified'].includes(a.status));
 
     // ΑΤΟΜΙΚΗ (A + AO)
@@ -950,7 +946,7 @@ function renderSectorTable(list, title, isTeam) {
 
   let html = `<div style="padding:0 0 4px;">
     <div style="font-size:.72em;color:var(--muted);font-weight:700;letter-spacing:.8px;padding:8px 14px 4px;">${title}</div>
-    <div class="table-scroll-wrap"><table class="rtable">
+    <table class="rtable">
       <thead><tr>
         <th style="width:36px;">ΘΕΣ.</th>
         <th>ΑΘΛΗΤΗΣ</th>
@@ -968,6 +964,7 @@ function renderSectorTable(list, title, isTeam) {
     const trClass = isLeader ? 'leader' : '';
 
     let dataCols = '';
+    let chipsHtml = '';
     if (isFloatRace) {
       const w  = sc.total   > 0 ? `${sc.total} <span class="score-unit">gr</span>`   : '—';
       const mx = sc.maxFish > 0 ? `${sc.maxFish} <span class="score-unit">gr</span>` : '—';
@@ -979,11 +976,13 @@ function renderSectorTable(list, title, isTeam) {
       const maxVal   = sc.maxFish;
       const totalCm  = sc.sortedCatches.reduce((s,c)=>s+c,0);
       const p10      = sc.fishCount * 10;
-      const maxChip = maxVal > 0 ? `<span class="fish-chip max" style="margin-left:5px;vertical-align:middle;">${maxVal}cm</span>` : '';
+      if (sc.fishCount > 0) {
+        chipsHtml = `<div class="fish-chips">${catches.map(cm=>`<span class="fish-chip${cm===maxVal?' max':''}">${cm}cm</span>`).join('')}</div>`;
+      }
       dataCols = `
         <td class="sub-score" style="text-align:center;">${sc.fishCount>0?sc.fishCount:'—'}</td>
         <td class="sub-score" style="text-align:right;">${totalCm>0?totalCm+'cm':'—'}</td>
-        <td class="sub-score" style="text-align:right;white-space:nowrap;">${p10>0?p10:'—'}${maxChip}</td>
+        <td class="sub-score" style="text-align:right;">${p10>0?p10:'—'}</td>
         <td class="score-val" style="font-size:.85em;">${sc.total>0?'<span style="color:var(--cyan);font-weight:700;">'+sc.total+'</span> <span class="score-unit">pts</span>':'—'}</td>`;
     }
 
@@ -992,13 +991,14 @@ function renderSectorTable(list, title, isTeam) {
       <td>
         <div class="ath-name">${a.lastname} ${a.firstname}<span class="ptype-badge ptype-${pt}">${pt}</span></div>
         <div class="ath-club">${a.club||''}</div>
+        ${chipsHtml}
       </td>
       ${dataCols}
       <td class="sub-score" style="text-align:right;${isLeader?'color:var(--gold);font-weight:700;':''}">${rank||'—'}</td>
     </tr>`;
   });
 
-  html += `</tbody></table></div></div>`;
+  html += `</tbody></table></div>`;
   return html;
 }
 
@@ -1026,7 +1026,7 @@ function renderIndividual() {
 
   const scoreTh = isFloatRace
     ? `<th style="text-align:right;width:80px;">ΒΑΡΟΣ (gr)</th><th style="text-align:right;width:70px;">MAX (gr)</th>`
-    : `<th style="text-align:center;width:32px;">🐟</th><th style="text-align:right;width:50px;">CM</th><th style="text-align:right;width:42px;">Πχ10</th><th style="text-align:right;width:45px;">MAX</th><th style="text-align:right;width:60px;color:var(--amber);">ΠΌΝΤΟΙ</th>`;
+    : `<th style="text-align:center;width:32px;">🐟</th><th style="text-align:right;width:50px;">CM</th><th style="text-align:right;width:45px;">MAX</th><th style="text-align:right;width:60px;color:var(--amber);">ΠΌΝΤΟΙ</th>`;
 
   let html = `<div>`;
 
@@ -1055,7 +1055,7 @@ function renderIndividual() {
         <span class="results-card-title">ΤΟΜΕΑΣ ${sec.name}${virtBadge}</span>
         <span class="done-badge">${doneCnt}${isFloatRace?'':'/10'} ✓</span>
       </div>
-      <div class="table-scroll-wrap"><table class="rtable">
+      <table class="rtable">
         <thead><tr>
           <th style="width:36px;">ΚΑΤ.</th>
           <th style="width:44px;">ΘΕΣ.</th>
@@ -1078,7 +1078,8 @@ function renderIndividual() {
       const trStyle  = isLoaned ? 'background:rgba(255,107,43,.06);' : '';
 
       let dataCols = '';
-        if (isFloatRace) {
+      let chipsHtml = '';
+      if (isFloatRace) {
         const w  = sc.total   > 0 ? `${sc.total} <span class="score-unit">gr</span>`   : '—';
         const mx = sc.maxFish > 0 ? `${sc.maxFish} <span class="score-unit">gr</span>` : '—';
         dataCols = `<td class="sub-score" style="text-align:right;">${w}</td><td class="sub-score" style="text-align:right;">${mx}</td>`;
@@ -1087,11 +1088,12 @@ function renderIndividual() {
         const cm   = sc.sortedCatches.reduce((s,c)=>s+c,0);
         const mx   = sc.maxFish;
         const pts  = sc.total;
-        const p10 = fish * 10;
+        if (fish > 0) {
+          chipsHtml = `<div class="fish-chips">${(a.catches||[]).map(v=>`<span class="fish-chip${v===mx?' max':''}">${v}cm</span>`).join('')}</div>`;
+        }
         dataCols = `
           <td class="sub-score" style="text-align:center;">${fish||'—'}</td>
           <td class="sub-score" style="text-align:right;">${cm||'—'}</td>
-          <td class="sub-score" style="text-align:right;">${p10||'—'}</td>
           <td class="sub-score" style="text-align:right;">${mx||'—'}</td>
           <td class="sub-score" style="text-align:right;color:var(--amber);font-weight:700;">${pts||'—'}</td>`;
       }
@@ -1101,14 +1103,15 @@ function renderIndividual() {
         <td style="text-align:center;">${posCell}</td>
         <td>
           <div class="ath-name ${isLoaned?'loaned-name':''}">${nameStr}</div>
-          </td>
+          ${chipsHtml}
+        </td>
         <td class="ath-club" style="font-size:.75em;">${a.club||'—'}</td>
         <td style="text-align:center;"><span class="ptype-badge ptype-${pt}">${pt}</span></td>
         ${dataCols}
       </tr>`;
     });
 
-    html += `</tbody></table></div></div>`;
+    html += `</tbody></table></div>`;
   });
 
   html += `<div class="footer">SFM Live v18 · Ατομική τομέων · Ανανέωση κάθε ${POLL_INTERVAL/1000}s</div></div>`;
@@ -1129,7 +1132,7 @@ function renderTeam() {
 
   const scoreTh = isFloatRace
     ? `<th style="text-align:right;width:80px;">ΒΑΡΟΣ (gr)</th><th style="text-align:right;width:70px;">MAX (gr)</th>`
-    : `<th style="text-align:center;width:32px;">🐟</th><th style="text-align:right;width:50px;">CM</th><th style="text-align:right;width:42px;">Πχ10</th><th style="text-align:right;width:45px;">MAX</th><th style="text-align:right;width:60px;color:var(--amber);">ΠΌΝΤΟΙ</th>`;
+    : `<th style="text-align:center;width:32px;">🐟</th><th style="text-align:right;width:50px;">CM</th><th style="text-align:right;width:45px;">MAX</th><th style="text-align:right;width:60px;color:var(--amber);">ΠΌΝΤΟΙ</th>`;
 
   let html = `<div>`;
 
@@ -1158,7 +1161,7 @@ function renderTeam() {
         <span class="results-card-title">ΤΟΜΕΑΣ ${sec.name}${virtBadge}</span>
         <span class="done-badge">${doneCnt}${isFloatRace?'':'/10'} ✓</span>
       </div>
-      <div class="table-scroll-wrap"><table class="rtable">
+      <table class="rtable">
         <thead><tr>
           <th style="width:36px;">ΚΑΤ.</th>
           <th style="width:44px;">ΘΕΣ.</th>
@@ -1181,7 +1184,8 @@ function renderTeam() {
       const trStyle  = isLoaned ? 'background:rgba(255,107,43,.06);' : '';
 
       let dataCols = '';
-        if (isFloatRace) {
+      let chipsHtml = '';
+      if (isFloatRace) {
         const w  = sc.total   > 0 ? `${sc.total} <span class="score-unit">gr</span>`   : '—';
         const mx = sc.maxFish > 0 ? `${sc.maxFish} <span class="score-unit">gr</span>` : '—';
         dataCols = `<td class="sub-score" style="text-align:right;">${w}</td><td class="sub-score" style="text-align:right;">${mx}</td>`;
@@ -1190,11 +1194,12 @@ function renderTeam() {
         const cm   = sc.sortedCatches.reduce((s,c)=>s+c,0);
         const mx   = sc.maxFish;
         const pts  = sc.total;
-        const p10 = fish * 10;
+        if (fish > 0) {
+          chipsHtml = `<div class="fish-chips">${(a.catches||[]).map(v=>`<span class="fish-chip${v===mx?' max':''}">${v}cm</span>`).join('')}</div>`;
+        }
         dataCols = `
           <td class="sub-score" style="text-align:center;">${fish||'—'}</td>
           <td class="sub-score" style="text-align:right;">${cm||'—'}</td>
-          <td class="sub-score" style="text-align:right;">${p10||'—'}</td>
           <td class="sub-score" style="text-align:right;">${mx||'—'}</td>
           <td class="sub-score" style="text-align:right;color:var(--amber);font-weight:700;">${pts||'—'}</td>`;
       }
@@ -1204,14 +1209,15 @@ function renderTeam() {
         <td style="text-align:center;">${posCell}</td>
         <td>
           <div class="ath-name ${isLoaned?'loaned-name':''}">${nameStr}</div>
-          </td>
+          ${chipsHtml}
+        </td>
         <td class="ath-club" style="font-size:.75em;">${a.club||'—'}</td>
         <td style="text-align:center;"><span class="ptype-badge ptype-${pt}">${pt}</span></td>
         ${dataCols}
       </tr>`;
     });
 
-    html += `</tbody></table></div></div>`;
+    html += `</tbody></table></div>`;
   });
 
   html += `<div class="footer">SFM Live v18 · Ομαδική τομέων · Ανανέωση κάθε ${POLL_INTERVAL/1000}s</div></div>`;
