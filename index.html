@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>🐟 SFM Results Live v20</title>
+<title>🐟 SFM Results Live v21</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
 
@@ -960,8 +960,8 @@ function renderChampionshipData() {
     const medal = medals[t.rank] || t.rank;
     const rkc   = t.rank<=3?`rk${t.rank}`:'rko';
     const raceCols = (t.raceResults||[]).map(r =>
-      r ? `<td class="sub-score" style="text-align:center;color:var(--cyan);">${r.dailyRank||'—'}</td><td class="sub-score" style="text-align:center;color:var(--amber);">${r.totalPenalty||'—'}</td>`
-        : `<td class="sub-score" style="text-align:center;">—</td><td class="sub-score">—</td>`
+      r ? `<td class="sub-score" style="text-align:center;color:var(--cyan);">${r.dailyRank||'—'}</td><td class="sub-score" style="text-align:center;color:var(--amber);">${r.totalPenalty||'—'}</td><td class="sub-score" style="text-align:center;color:var(--green);">${r.dailyPts!=null?Math.round(r.dailyPts):'—'}</td>`
+        : `<td class="sub-score" style="text-align:center;">—</td><td class="sub-score">—</td><td class="sub-score">—</td>`
     ).join('');
     return `<tr class="${t.rank<=3?'r'+t.rank:''}">
       <td class="rank-cell ${rkc}">${medal}</td>
@@ -969,6 +969,7 @@ function renderChampionshipData() {
       ${raceCols}
       <td class="score-val" style="text-align:center;color:var(--gold);">${t.totalDailyRanks}</td>
       <td class="sub-score" style="text-align:center;color:var(--amber);">${t.totalPenalty}</td>
+      <td class="score-val" style="text-align:center;color:var(--green);font-weight:700;">${t.totalPoints!=null?Math.round(t.totalPoints):'—'}</td>
     </tr>`;
   }).join('');
 
@@ -1010,13 +1011,17 @@ function renderChampionshipData() {
         <table class="rtable">
           <thead>
             <tr>
-              <th style="width:38px;">#</th><th>ΣΥΛΛΟΓΟΣ</th>
-              ${Array.from({length:numRacesTeam},(_,i)=>`<th colspan="2" style="text-align:center;color:var(--cyan);">${i+1}ος</th>`).join('')}
-              <th style="text-align:center;color:var(--gold);">Άθρ.Θέσεων</th>
-              <th style="text-align:center;color:var(--amber);">Άθρ.Ποινών</th>
+              <th style="width:38px;" rowspan="2">#</th><th rowspan="2">ΣΥΛΛΟΓΟΣ</th>
+              ${Array.from({length:numRacesTeam},(_,i)=>`<th colspan="3" style="text-align:center;color:var(--cyan);">${i+1}ος</th>`).join('')}
+              <th style="text-align:center;color:var(--gold);" rowspan="2">Άθρ.Θέσεων</th>
+              <th style="text-align:center;color:var(--amber);" rowspan="2">Άθρ.Ποινών</th>
+              <th style="text-align:center;color:var(--green);" rowspan="2">Σύνολο</th>
+            </tr>
+            <tr>
+              ${Array.from({length:numRacesTeam},()=>`<th style="text-align:center;font-size:.68em;color:var(--muted);">Θέση</th><th style="text-align:center;font-size:.68em;color:var(--muted);">Ποινή</th><th style="text-align:center;font-size:.68em;color:var(--muted);">Πόντοι</th>`).join('')}
             </tr>
           </thead>
-          <tbody>${teamRows||emptyRow(8,'Δεν υπάρχουν αποτελέσματα')}</tbody>
+          <tbody>${teamRows||emptyRow(numRacesTeam*3+5,'Δεν υπάρχουν αποτελέσματα')}</tbody>
         </table>
       </div>
     </div>
