@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>🐟 SFM Results Live v21</title>
+<title>🐟 SFM Results Live v25</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
 
@@ -53,7 +53,13 @@ body { font-family:'IBM Plex Sans',sans-serif; background:var(--navy); color:var
 @keyframes blink { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.3;transform:scale(.6)} }
 
 /* ── RACE SELECTOR ─────────────────────────────────────── */
-.race-selector { margin-top:8px; position:relative; }
+.race-title-hdr {
+  font-size:.72em; font-weight:700; color:var(--white);
+  letter-spacing:.5px; line-height:1.3;
+  margin-top:8px; margin-bottom:4px;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.race-selector { position:relative; }
 .race-select {
   width:100%; padding:10px 36px 10px 12px;
   background:rgba(0,200,224,0.08); border:1px solid var(--border2);
@@ -216,6 +222,7 @@ body { font-family:'IBM Plex Sans',sans-serif; background:var(--navy); color:var
       <div class="live-dot"></div>LIVE
     </div>
   </div>
+  <div class="race-title-hdr" id="raceTitleHdr" style="display:none;"></div>
   <div class="race-selector" id="raceSelectorWrap" style="display:none;">
     <select class="race-select" id="raceSelect" onchange="onRaceChange()">
       <option value="">— Επιλογή Αγώνα —</option>
@@ -271,14 +278,29 @@ let currentView  = 'draw';
 let currentSector= null;
 let pollingTimer = null;
 
-// sessionStorage key για αποθήκευση τελευταίου tab
-const SESSION_KEY = 'sfmlive_tab';
+// ─────────────────────────────────────────────────────────────
+// SESSION STORAGE: αποθήκευση τελευταίου tab + αγώνα
+// ─────────────────────────────────────────────────────────────
+const SESSION_TAB_KEY  = 'sfmlive_tab';
+const SESSION_RACE_KEY = 'sfmlive_race';
 
 function saveTab(view) {
-  try { sessionStorage.setItem(SESSION_KEY, view); } catch(e) {}
+  try { sessionStorage.setItem(SESSION_TAB_KEY, view); } catch(e) {}
 }
 function savedTab(defaultView) {
-  try { return sessionStorage.getItem(SESSION_KEY) || defaultView; } catch(e) { return defaultView; }
+  try { return sessionStorage.getItem(SESSION_TAB_KEY) || defaultView; } catch(e) { return defaultView; }
+}
+
+/** Αποθηκεύει το race id ώστε μετά από F5 να επιστρέψει στον ίδιο αγώνα */
+function saveRace(id) {
+  try { sessionStorage.setItem(SESSION_RACE_KEY, String(id)); } catch(e) {}
+}
+/** Επιστρέφει το αποθηκευμένο race id (int) ή null αν δεν υπάρχει */
+function savedRace() {
+  try {
+    const v = sessionStorage.getItem(SESSION_RACE_KEY);
+    return v ? parseInt(v, 10) : null;
+  } catch(e) { return null; }
 }
 
 // ============================================================
@@ -310,7 +332,7 @@ async function loadRaceByUid(uid) {
 async function loadRaceByChamp(champId) {
   showLoading();
   try {
-    const res  = await sbFetch(`races?championship_id=eq.${enc(champId)}&is_active=eq.true&order=round_number.desc&limit=10`);
+    const res  = await sbFetch(`races?championship_id=eq.${enc(champId)}&is_active=eq.true&order=round_number.asc&limit=10`);
     const rows = await res.json();
     if (!rows.length) { showError('Το πρωτάθλημα δεν βρέθηκε ή δεν έχει ενεργούς αγώνες.<br><small>Ελέγξτε το link.</small>'); return; }
     races = rows;
@@ -318,7 +340,14 @@ async function loadRaceByChamp(champId) {
     else document.getElementById('raceSelectorWrap').style.display = 'none';
     // Επαναφορά τελευταίου tab — αν δεν υπάρχει αποθηκευμένο, default = championship
     currentView = savedTab('championship');
-    await selectRace(rows[0].id);
+    // Default πάντα = τελευταία αγωνιστική (max round_number)
+    // savedRace χρησιμοποιείται μόνο αν ο χρήστης το άλλαξε χειροκίνητα
+    const latestId = rows[rows.length - 1].id;
+    const savedId  = savedRace();
+    // Αν δεν υπάρχει αποθηκευμένο ή δεν βρίσκεται στη λίστα → latest
+    const targetId = (savedId && savedId !== latestId && rows.find(r => r.id === savedId))
+      ? savedId : latestId;
+    await selectRace(targetId);
   } catch(e) { showError(e.message); }
 }
 
@@ -330,17 +359,26 @@ async function loadRaces() {
     if (!races.length) { showNoRaces(); return; }
     populateDropdown();
     currentView = savedTab('draw');
-    await selectRace(races[0].id);
+    // ── FIX: επαναφορά αγώνα μετά από F5 ──────────────────
+    const savedId = savedRace();
+    const targetId = (savedId && races.find(r => r.id === savedId)) ? savedId : races[0].id;
+    await selectRace(targetId);
   } catch(e) { showError(e.message); }
 }
 
 function populateDropdown() {
   const sel = document.getElementById('raceSelect');
-  sel.innerHTML = '<option value="">— Επιλογή Αγώνα —</option>';
+  sel.innerHTML = '';
+  // Τίτλος αγώνα ως header (κοινός για όλες τις αγωνιστικές)
+  const titleHdr = document.getElementById('raceTitleHdr');
+  if (titleHdr && races[0]) {
+    titleHdr.textContent = races[0].race_title || races[0].race_code || '';
+    titleHdr.style.display = titleHdr.textContent ? '' : 'none';
+  }
   races.forEach(r => {
     const opt = document.createElement('option');
     opt.value = r.id;
-    opt.textContent = `${r.race_title||r.race_code} · ${r.race_location||''} · Αγ.${r.round_number}`;
+    opt.textContent = `${r.round_number}η Αγωνιστική`;
     sel.appendChild(opt);
   });
   document.getElementById('raceSelectorWrap').style.display = 'block';
@@ -356,6 +394,8 @@ async function onRaceChange() {
 async function selectRace(id) {
   currentRace = races.find(r => r.id === id);
   if (!currentRace) return;
+  // ── FIX: αποθήκευση τρέχοντος αγώνα ───────────────────
+  saveRace(id);
   document.getElementById('raceSelect').value = id;
   updateRaceMeta();
   document.getElementById('navTabs').style.display  = 'flex';
@@ -449,15 +489,11 @@ function showView(view) {
 function renderDraw() {
   const main = document.getElementById('mainContent');
 
-  // Αν η κλήρωση δεν έχει παρουσιαστεί → κρύβουμε θέσεις
   if (!currentRace.cinema_played_at) {
     main.innerHTML = `<div class="center-state">
       <div class="state-icon">🔒</div>
       <div class="state-title">ΚΛΗΡΩΣΗ</div>
-      <div class="state-text">
-        Η κλήρωση δεν έχει γινει !!! <br>
-        
-      </div>
+      <div class="state-text">Η κλήρωση δεν έχει γινει !!!</div>
     </div>`;
     return;
   }
@@ -508,7 +544,7 @@ function renderDraw() {
     });
     html += `</tbody></table></div>`;
   });
-  html += `<div class="footer">SFM Live v20 · Κλήρωση</div></div>`;
+  html += `<div class="footer">SFM Live v24 · Κλήρωση</div></div>`;
   main.innerHTML = html;
 }
 
@@ -530,7 +566,6 @@ function filterDraw(q) {
 function renderLive() {
   const main    = document.getElementById('mainContent');
 
-  // v20: Χωρίς live κλήρωση → δεν εμφανίζονται αποτελέσματα
   if (!currentRace.cinema_played_at) {
     main.innerHTML = waitingDrawHtml();
     return;
@@ -557,12 +592,11 @@ function renderLive() {
       <div class="state-icon">⏳</div>
       <div class="state-text">Αναμονή για πρώτη δημοσίευση αποτελεσμάτων...</div>
     </div>`;
-    html += `<div class="footer">SFM Live v20 · Live · Ανανέωση κάθε ${POLL_INTERVAL/1000}s</div></div>`;
+    html += `<div class="footer">SFM Live v24 · Live · Ανανέωση κάθε ${POLL_INTERVAL/1000}s</div></div>`;
     main.innerHTML = html;
     return;
   }
 
-  // Sector strip
   const sectors = raceResults.atomiko_sectors;
   html += `<div class="sector-strip">
     <div class="sector-chip ${!currentSector?'active':''}" onclick="selectSector('live',null)">Όλοι</div>
@@ -622,7 +656,7 @@ function renderLive() {
     html += `</tbody></table></div>`;
   });
 
-  html += `<div class="footer">SFM Live v20 · Live · Ανανέωση κάθε ${POLL_INTERVAL/1000}s</div></div>`;
+  html += `<div class="footer">SFM Live v24 · Live · Ανανέωση κάθε ${POLL_INTERVAL/1000}s</div></div>`;
   main.innerHTML = html;
 }
 
@@ -630,7 +664,6 @@ function renderLive() {
 function renderIndividual() {
   const main = document.getElementById('mainContent');
 
-  // v20: Χωρίς live κλήρωση → δεν εμφανίζονται αποτελέσματα
   if (!currentRace.cinema_played_at) {
     main.innerHTML = waitingDrawHtml();
     return;
@@ -704,7 +737,7 @@ function renderIndividual() {
     html += `</tbody></table></div>`;
   });
 
-  html += `<div class="footer">SFM Live v20 · Ατομική Τομέων · Ανανέωση κάθε ${POLL_INTERVAL/1000}s</div></div>`;
+  html += `<div class="footer">SFM Live v24 · Ατομική Τομέων · Ανανέωση κάθε ${POLL_INTERVAL/1000}s</div></div>`;
   main.innerHTML = html;
 }
 
@@ -712,15 +745,12 @@ function renderIndividual() {
 function renderTeam() {
   const main = document.getElementById('mainContent');
 
-  // v20: Χωρίς live κλήρωση → δεν εμφανίζονται αποτελέσματα
   if (!currentRace.cinema_played_at) {
     main.innerHTML = waitingDrawHtml();
     return;
   }
 
-  // Αν δεν υπάρχουν omadiko_sectors → εμφάνισε μήνυμα
   if (!raceResults || !raceResults.omadiko_sectors?.length) {
-    // Έλεγχος: αν δεν υπάρχει καθόλου ομαδική (unified mode)
     if (raceResults && raceResults.atomiko_sectors?.length) {
       main.innerHTML = noDataHtml('Δεν υπάρχει ξεχωριστή ομαδική κατάταξη.<br>(Unified mode — η ατομική ισχύει και για ομαδική)');
     } else {
@@ -792,7 +822,7 @@ function renderTeam() {
     html += `</tbody></table></div>`;
   });
 
-  html += `<div class="footer">SFM Live v20 · Ομαδική Τομέων · Ανανέωση κάθε ${POLL_INTERVAL/1000}s</div></div>`;
+  html += `<div class="footer">SFM Live v24 · Ομαδική Τομέων · Ανανέωση κάθε ${POLL_INTERVAL/1000}s</div></div>`;
   main.innerHTML = html;
 }
 
@@ -802,7 +832,6 @@ function selectSector(view, s) { currentSector = s; showView(view); }
 function renderFinal() {
   const main = document.getElementById('mainContent');
 
-  // v20: Χωρίς live κλήρωση → δεν εμφανίζονται αποτελέσματα
   if (!currentRace.cinema_played_at) {
     main.innerHTML = waitingDrawHtml();
     return;
@@ -819,7 +848,6 @@ function renderFinal() {
 
   let html = `<div>${pubBannerHtml(raceResults.published_at)}`;
 
-  // ── Τελική Ατομική ────────────────────────────────────────
   html += `<div class="results-card" style="margin-bottom:14px;">
     <div class="results-card-hdr">
       <span class="results-card-title">ΤΕΛΙΚΗ ΑΤΟΜΙΚΗ ΚΑΤΑΤΑΞΗ</span>
@@ -857,7 +885,6 @@ function renderFinal() {
 
   html += `</tbody></table></div>`;
 
-  // ── Τελική Ομαδική ────────────────────────────────────────
   if (teams.length) {
     html += `<div class="results-card">
       <div class="results-card-hdr">
@@ -904,7 +931,7 @@ function renderFinal() {
     html += `</tbody></table></div>`;
   }
 
-  html += `<div class="footer">SFM Live v20 · Τελική Κατάταξη · Ανανέωση κάθε ${POLL_INTERVAL/1000}s</div></div>`;
+  html += `<div class="footer">SFM Live v24 · Τελική Κατάταξη · Ανανέωση κάθε ${POLL_INTERVAL/1000}s</div></div>`;
   main.innerHTML = html;
 }
 
@@ -931,18 +958,38 @@ async function renderChampionship() {
   }
 }
 
+// ── FIX: sort raceResults asc by round/raceId (1η, 2η, 3η αγωνιστική) ──
+/**
+ * Ταξινομεί τα raceResults ενός αθλητή/ομάδας σε αύξουσα σειρά
+ * (1η → 2η → 3η αγωνιστική).
+ * Ελέγχει πεδία: round, roundNumber, raceId — όποιο βρει πρώτο.
+ */
+function sortRaceResults(arr) {
+  if (!arr || !arr.length) return arr || [];
+  return arr.slice().sort((a, b) => {
+    const ka = a?.round ?? a?.roundNumber ?? a?.raceId ?? 0;
+    const kb = b?.round ?? b?.roundNumber ?? b?.raceId ?? 0;
+    return ka - kb;
+  });
+}
+
 function renderChampionshipData() {
   const main = document.getElementById('mainContent');
   const { championship_title, rounds_done, published_at, individual=[], team=[] } = champData;
   const medals = {1:'🥇',2:'🥈',3:'🥉'};
   const pubDate = new Date(published_at).toLocaleString('el-GR');
-  const numRaces = individual.length ? (individual[0].raceResults||[]).length : 0;
+
+  // ── FIX: χρησιμοποιούμε sortRaceResults για σωστή σειρά στηλών ──
+  const numRaces     = individual.length ? sortRaceResults(individual[0].raceResults).length : 0;
+  const numRacesTeam = team.length       ? sortRaceResults(team[0].raceResults).length       : 0;
 
   const indivRows = individual.map(a => {
     const medal = medals[a.champRank] || a.champRank;
     const rkc   = a.champRank<=3?`rk${a.champRank}`:'rko';
-    const raceCols = (a.raceResults||[]).map(r =>
-      r && r.rank<900
+    // ── FIX: sort πριν το render ──
+    const sortedRR = sortRaceResults(a.raceResults);
+    const raceCols = sortedRR.map(r =>
+      r && r.rank < 900
         ? `<td class="sub-score" style="text-align:center;">${r.points}</td><td class="sub-score" style="text-align:center;color:var(--cyan);font-weight:700;">${r.rank}</td>`
         : `<td class="sub-score" style="text-align:center;color:var(--muted);">0</td><td class="sub-score" style="text-align:center;color:var(--red);">—</td>`
     ).join('');
@@ -955,12 +1002,14 @@ function renderChampionshipData() {
     </tr>`;
   }).join('');
 
-  const numRacesTeam = team.length ? (team[0].raceResults||[]).length : 0;
   const teamRows = team.map(t => {
     const medal = medals[t.rank] || t.rank;
     const rkc   = t.rank<=3?`rk${t.rank}`:'rko';
-    const raceCols = (t.raceResults||[]).map(r =>
-      r ? `<td class="sub-score" style="text-align:center;color:var(--cyan);">${r.dailyRank||'—'}</td><td class="sub-score" style="text-align:center;color:var(--amber);">${r.totalPenalty||'—'}</td><td class="sub-score" style="text-align:center;color:var(--green);">${r.dailyPts!=null?Math.round(r.dailyPts):'—'}</td>`
+    // ── FIX: sort πριν το render ──
+    const sortedRR = sortRaceResults(t.raceResults);
+    const raceCols = sortedRR.map(r =>
+      r
+        ? `<td class="sub-score" style="text-align:center;color:var(--cyan);">${r.dailyRank||'—'}</td><td class="sub-score" style="text-align:center;color:var(--amber);">${r.totalPenalty||'—'}</td><td class="sub-score" style="text-align:center;color:var(--green);">${r.dailyPts!=null?Math.round(r.dailyPts):'—'}</td>`
         : `<td class="sub-score" style="text-align:center;">—</td><td class="sub-score">—</td><td class="sub-score">—</td>`
     ).join('');
     return `<tr class="${t.rank<=3?'r'+t.rank:''}">
@@ -991,7 +1040,7 @@ function renderChampionshipData() {
           <thead>
             <tr>
               <th style="width:38px;">#</th><th>ΑΘΛΗΤΗΣ</th>
-              ${Array.from({length:numRaces},(_,i)=>`<th colspan="2" style="text-align:center;color:var(--cyan);">${i+1}ος</th>`).join('')}
+              ${Array.from({length:numRaces},(_,i)=>`<th colspan="2" style="text-align:center;color:var(--cyan);">${i+1}η Αγ.</th>`).join('')}
               <th style="text-align:center;color:var(--green);">Σύνολο</th>
               <th style="text-align:center;color:var(--gold);">Βαθμός</th>
             </tr>
@@ -1000,7 +1049,7 @@ function renderChampionshipData() {
               <th></th><th></th>
             </tr>
           </thead>
-          <tbody>${indivRows||emptyRow(10,'Δεν υπάρχουν αποτελέσματα')}</tbody>
+          <tbody>${indivRows||emptyRow(4+numRaces*2,'Δεν υπάρχουν αποτελέσματα')}</tbody>
         </table>
       </div>
     </div>
@@ -1012,7 +1061,7 @@ function renderChampionshipData() {
           <thead>
             <tr>
               <th style="width:38px;" rowspan="2">#</th><th rowspan="2">ΣΥΛΛΟΓΟΣ</th>
-              ${Array.from({length:numRacesTeam},(_,i)=>`<th colspan="3" style="text-align:center;color:var(--cyan);">${i+1}ος</th>`).join('')}
+              ${Array.from({length:numRacesTeam},(_,i)=>`<th colspan="3" style="text-align:center;color:var(--cyan);">${i+1}η Αγ.</th>`).join('')}
               <th style="text-align:center;color:var(--gold);" rowspan="2">Άθρ.Θέσεων</th>
               <th style="text-align:center;color:var(--amber);" rowspan="2">Άθρ.Ποινών</th>
               <th style="text-align:center;color:var(--green);" rowspan="2">Σύνολο</th>
@@ -1025,7 +1074,7 @@ function renderChampionshipData() {
         </table>
       </div>
     </div>
-    <div class="footer">SFM Live v20 · Πρωτάθλημα</div>
+    <div class="footer">SFM Live v24 · Πρωτάθλημα</div>
   </div>`;
 }
 
@@ -1108,7 +1157,6 @@ function noDataHtml(msg) {
     <button class="no-results-btn" onclick="manualRefresh()">🔄 Ανανέωση</button>
   </div>`;
 }
-// v20: Όταν ο αγώνας δεν έχει παίξει live → έλεγχος cinema_played_at
 function waitingDrawHtml() {
   return `<div class="center-state">
     <div class="state-icon">🔒</div>
