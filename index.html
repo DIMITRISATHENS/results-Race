@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>🐟 SFM Results Live v25</title>
+<title>🐟 SFM Results Live v26</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
 
@@ -335,18 +335,16 @@ async function loadRaceByChamp(champId) {
     const res  = await sbFetch(`races?championship_id=eq.${enc(champId)}&is_active=eq.true&order=round_number.asc&limit=10`);
     const rows = await res.json();
     if (!rows.length) { showError('Το πρωτάθλημα δεν βρέθηκε ή δεν έχει ενεργούς αγώνες.<br><small>Ελέγξτε το link.</small>'); return; }
+    // Client-side sort — εγγυημένη σειρά 1η→2η→3η ανεξαρτήτως Supabase
+    rows.sort((a, b) => (a.round_number || 0) - (b.round_number || 0));
     races = rows;
-    if (rows.length > 1) populateDropdown();
+    if (rows.length > 1) populateDropdown(true);
     else document.getElementById('raceSelectorWrap').style.display = 'none';
     // Επαναφορά τελευταίου tab — αν δεν υπάρχει αποθηκευμένο, default = championship
     currentView = savedTab('championship');
-    // Default πάντα = τελευταία αγωνιστική (max round_number)
-    // savedRace χρησιμοποιείται μόνο αν ο χρήστης το άλλαξε χειροκίνητα
-    const latestId = rows[rows.length - 1].id;
-    const savedId  = savedRace();
-    // Αν δεν υπάρχει αποθηκευμένο ή δεν βρίσκεται στη λίστα → latest
-    const targetId = (savedId && savedId !== latestId && rows.find(r => r.id === savedId))
-      ? savedId : latestId;
+    // Default = πάντα 1η αγωνιστική (rows[0] μετά sort)
+    // Δεν χρησιμοποιούμε savedRace εδώ — αποφεύγουμε παλιές τιμές από sessionStorage
+    const targetId = rows[0].id;
     await selectRace(targetId);
   } catch(e) { showError(e.message); }
 }
@@ -357,28 +355,36 @@ async function loadRaces() {
     const res  = await sbFetch('races?is_active=eq.true&order=created_at.desc&limit=50');
     races = await res.json();
     if (!races.length) { showNoRaces(); return; }
-    populateDropdown();
+    // Sort by round_number asc — 1η πάντα πρώτη ανεξαρτήτως created_at
+    races.sort((a, b) => (a.round_number || 0) - (b.round_number || 0));
+    populateDropdown(false);
     currentView = savedTab('draw');
-    // ── FIX: επαναφορά αγώνα μετά από F5 ──────────────────
-    const savedId = savedRace();
-    const targetId = (savedId && races.find(r => r.id === savedId)) ? savedId : races[0].id;
+    // Default = 1η αγωνιστική πάντα
+    const targetId = races[0].id;
     await selectRace(targetId);
   } catch(e) { showError(e.message); }
 }
 
-function populateDropdown() {
+function populateDropdown(isChamp = false) {
   const sel = document.getElementById('raceSelect');
   sel.innerHTML = '';
-  // Τίτλος αγώνα ως header (κοινός για όλες τις αγωνιστικές)
+  // Πάντα sort εδώ — αδύνατο να εμφανιστεί λάθος σειρά
+  const sorted = isChamp
+    ? [...races].sort((a, b) => (a.round_number || 0) - (b.round_number || 0))
+    : races;
   const titleHdr = document.getElementById('raceTitleHdr');
-  if (titleHdr && races[0]) {
-    titleHdr.textContent = races[0].race_title || races[0].race_code || '';
+  if (isChamp && titleHdr && sorted[0]) {
+    titleHdr.textContent = sorted[0].race_title || sorted[0].race_code || '';
     titleHdr.style.display = titleHdr.textContent ? '' : 'none';
+  } else if (titleHdr) {
+    titleHdr.style.display = 'none';
   }
-  races.forEach(r => {
+  sorted.forEach(r => {
     const opt = document.createElement('option');
     opt.value = r.id;
-    opt.textContent = `${r.round_number}η Αγωνιστική`;
+    opt.textContent = isChamp
+      ? `${r.round_number}η Αγωνιστική`
+      : `${r.race_title||r.race_code} · ${r.race_location||''} · Αγ.${r.round_number}`;
     sel.appendChild(opt);
   });
   document.getElementById('raceSelectorWrap').style.display = 'block';
@@ -544,7 +550,7 @@ function renderDraw() {
     });
     html += `</tbody></table></div>`;
   });
-  html += `<div class="footer">SFM Live v24 · Κλήρωση</div></div>`;
+  html += `<div class="footer">SFM Live v26 · Κλήρωση</div></div>`;
   main.innerHTML = html;
 }
 
@@ -592,7 +598,7 @@ function renderLive() {
       <div class="state-icon">⏳</div>
       <div class="state-text">Αναμονή για πρώτη δημοσίευση αποτελεσμάτων...</div>
     </div>`;
-    html += `<div class="footer">SFM Live v24 · Live · Ανανέωση κάθε ${POLL_INTERVAL/1000}s</div></div>`;
+    html += `<div class="footer">SFM Live v26 · Live · Ανανέωση κάθε ${POLL_INTERVAL/1000}s</div></div>`;
     main.innerHTML = html;
     return;
   }
@@ -656,7 +662,7 @@ function renderLive() {
     html += `</tbody></table></div>`;
   });
 
-  html += `<div class="footer">SFM Live v24 · Live · Ανανέωση κάθε ${POLL_INTERVAL/1000}s</div></div>`;
+  html += `<div class="footer">SFM Live v26 · Live · Ανανέωση κάθε ${POLL_INTERVAL/1000}s</div></div>`;
   main.innerHTML = html;
 }
 
@@ -737,7 +743,7 @@ function renderIndividual() {
     html += `</tbody></table></div>`;
   });
 
-  html += `<div class="footer">SFM Live v24 · Ατομική Τομέων · Ανανέωση κάθε ${POLL_INTERVAL/1000}s</div></div>`;
+  html += `<div class="footer">SFM Live v26 · Ατομική Τομέων · Ανανέωση κάθε ${POLL_INTERVAL/1000}s</div></div>`;
   main.innerHTML = html;
 }
 
@@ -822,7 +828,7 @@ function renderTeam() {
     html += `</tbody></table></div>`;
   });
 
-  html += `<div class="footer">SFM Live v24 · Ομαδική Τομέων · Ανανέωση κάθε ${POLL_INTERVAL/1000}s</div></div>`;
+  html += `<div class="footer">SFM Live v26 · Ομαδική Τομέων · Ανανέωση κάθε ${POLL_INTERVAL/1000}s</div></div>`;
   main.innerHTML = html;
 }
 
@@ -931,7 +937,7 @@ function renderFinal() {
     html += `</tbody></table></div>`;
   }
 
-  html += `<div class="footer">SFM Live v24 · Τελική Κατάταξη · Ανανέωση κάθε ${POLL_INTERVAL/1000}s</div></div>`;
+  html += `<div class="footer">SFM Live v26 · Τελική Κατάταξη · Ανανέωση κάθε ${POLL_INTERVAL/1000}s</div></div>`;
   main.innerHTML = html;
 }
 
@@ -1074,7 +1080,7 @@ function renderChampionshipData() {
         </table>
       </div>
     </div>
-    <div class="footer">SFM Live v24 · Πρωτάθλημα</div>
+    <div class="footer">SFM Live v26 · Πρωτάθλημα</div>
   </div>`;
 }
 
