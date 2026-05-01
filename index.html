@@ -652,7 +652,7 @@ function renderLive() {
     ${sectors.map(s => `
       <div class="sector-chip ${currentSector===s.name?'active':''}"
            onclick="selectSector('live','${s.name}')">
-        ${s.name}${s.isVirtual?' 🔶':''}
+        ${s.name}${s.isVirtual?' ':''}
       </div>`).join('')}
   </div>`;
 
@@ -664,7 +664,7 @@ function renderLive() {
 
     html += `<div class="results-card">
       <div class="results-card-hdr">
-        <span class="results-card-title">ΤΟΜΕΑΣ ${sec.name}${sec.isVirtual?`<span class="virtual-badge">ΤΕΧΝΗΤΟΣ</span>`:''}</span>
+        <span class="results-card-title">ΤΟΜΕΑΣ ${sec.name}${sec.isVirtual?`<span class="virtual-badge"></span>`:''}</span>
       </div>
       <table class="rtable">
         <thead><tr>
@@ -735,7 +735,7 @@ function renderIndividual() {
       ${sectors.map(s => `
         <div class="sector-chip ${currentSector===s.name?'active':''}"
              onclick="selectSector('individual','${s.name}')">
-          ${s.name}${s.isVirtual?' 🔶':''}
+          ${s.name}${s.isVirtual?' ':''}
         </div>`).join('')}
     </div>`;
 
@@ -744,7 +744,7 @@ function renderIndividual() {
   showSectors.forEach(sec => {
     const all = [...(sec.athletes||[]), ...(sec.loanedIn||[])]
       .sort((a,b) => (a.sectorRank||999) - (b.sectorRank||999));
-    const virtBadge = sec.isVirtual ? `<span class="virtual-badge">ΤΕΧΝΗΤΟΣ</span>` : '';
+    const virtBadge = sec.isVirtual ? `<span class="virtual-badge"></span>` : '';
 
     html += `<div class="results-card">
       <div class="results-card-hdr">
@@ -820,7 +820,7 @@ function renderTeam() {
       ${sectors.map(s => `
         <div class="sector-chip ${currentSector===s.name?'active':''}"
              onclick="selectSector('team','${s.name}')">
-          ${s.name}${s.isVirtual?' 🔶':''}
+          ${s.name}${s.isVirtual?'':''}
         </div>`).join('')}
     </div>`;
 
@@ -829,7 +829,7 @@ function renderTeam() {
   showSectors.forEach(sec => {
     const all = [...(sec.athletes||[]), ...(sec.loanedIn||[])]
       .sort((a,b) => (a.sectorRankTeam||999) - (b.sectorRankTeam||999));
-    const virtBadge = sec.isVirtual ? `<span class="virtual-badge">ΤΕΧΝΗΤΟΣ</span>` : '';
+    const virtBadge = sec.isVirtual ? `<span class="virtual-badge"></span>` : '';
 
     html += `<div class="results-card">
       <div class="results-card-hdr">
